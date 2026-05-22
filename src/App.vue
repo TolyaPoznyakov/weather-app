@@ -3,14 +3,17 @@ import { apiRequest } from "@/composables/apiRequest.js";
 import { ref, onMounted, computed } from "vue";
 import WeatherSearch from "@/components/WeatherSearch.vue";
 import WeatherCard from "@/components/WeatherCard.vue";
+import WeatherChart from "@/components/WeatherChart.vue";
+import ForecastSwitch from "@/components/ForecastSwitch.vue";
 import { getWeatherBackground } from "@/composables/useWeatherBackground.js";
 
 
 const data = ref(null);
 const searchCity = ref("Kyiv");
+const forecastMode = ref("day");
 
 const fetchWeather = async (city) => {
-  data.value = await apiRequest(city, 1);
+  data.value = await apiRequest(city, 3);
 };
 
 const backgroundStyle = computed(() => ({
@@ -18,6 +21,7 @@ const backgroundStyle = computed(() => ({
       data.value?.current?.condition?.code,
       data.value?.current?.is_day
   )
+
 }));
 
 onMounted(() => {
@@ -28,15 +32,26 @@ onMounted(() => {
 <template>
   <div class="page" :style="backgroundStyle">
     <h1 class="title">Weather Forecast</h1>
-    <WeatherSearch
-        :searchCity="searchCity"
-        @update:searchCity="searchCity = $event"
-        @search="fetchWeather(searchCity)"
-    />
-    <WeatherCard
-        v-if="data"
-        :data="data"
-    />
+    <div class="weather-switch-search">
+      <WeatherSearch
+          :searchCity="searchCity"
+          @update:searchCity="searchCity = $event"
+          @search="fetchWeather(searchCity)"
+      />
+      <ForecastSwitch
+          v-model="forecastMode"
+      />
+    </div>
+    <div  v-if="data" class="weather-block">
+      <WeatherCard
+          :data="data"
+          :mode="forecastMode"
+      />
+      <WeatherChart
+          :forecast="data.forecast"
+          :mode="forecastMode"
+      />
+    </div>
     <div v-else class="loading">
       Loading...
     </div>
@@ -46,14 +61,23 @@ onMounted(() => {
 <style scoped>
 
 .page {
-  min-height: 100vh;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 0 30px 30px 30px;
+  min-height: 100vh;
+  padding: 30px;
   font-family: system-ui, sans-serif;
   transition: background 0.6s ease;
+}
+
+.weather-switch-search  {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.weather-block  {
+  display: flex;
+  gap: 20px;
 }
 
 .title {

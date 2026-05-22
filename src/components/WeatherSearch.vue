@@ -34,27 +34,32 @@ const updateValue = (e) => {
 }
 
 .search input {
-  width: 260px;
+  width: 500px;
+  height: 30px;
   padding: 14px 18px;
   border: none;
   border-radius: 16px;
   outline: none;
   background: rgba(255,255,255,0.15);
   color: white;
-  font-size: 15px;
+  font-size: 18px;
+  font-weight: 800;
   backdrop-filter: blur(10px);
 }
 
 .search input::placeholder {
+  font-size: 18px;
   color: rgba(255,255,255,0.7);
 }
 
 .search button {
+  width: 120px;
   padding: 14px 20px;
   border: none;
   border-radius: 16px;
   cursor: pointer;
-  font-weight: 700;
+  font-weight: 800;
+  font-size: 18px;
   transition: 0.25s;
 }
 

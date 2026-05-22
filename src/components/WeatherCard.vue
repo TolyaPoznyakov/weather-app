@@ -2,11 +2,35 @@
 import { computed } from "vue";
 
 const props = defineProps({
-  data: Object
+  data: Object,
+  mode: {
+    type: String,
+    default: "day"
+  }
 });
 
 const forecast = computed(() => {
-  return props.data?.forecast?.forecastday?.[0];
+  if (!props.data?.forecast?.forecastday) return null;
+
+  if (props.mode === "day") {
+    return props.data.forecast.forecastday[0];
+  } else {
+    const days = props.data.forecast.forecastday;
+    const avgTemp = Math.round(days.reduce((sum, d) => sum + d.day.avgtemp_c, 0) / days.length);
+    const avgHumidity = Math.round(days.reduce((sum, d) => sum + d.day.avghumidity, 0) / days.length);
+    const avgWind = Math.round(days.reduce((sum, d) => sum + d.day.maxwind_kph, 0) / days.length);
+    const avgPressure = Math.round(days.reduce((sum, d) => sum + d.day.pressure_mb, 0) / days.length);
+
+    return {
+      day: {
+        avgtemp_c: avgTemp,
+        avghumidity: avgHumidity,
+        maxwind_kph: avgWind,
+        pressure_mb: avgPressure
+      },
+      mode: "3days"
+    };
+  }
 });
 </script>
 
@@ -18,61 +42,73 @@ const forecast = computed(() => {
           <div>
             <h2 class="city">{{ data.location.name }}</h2>
             <p class="desc">
-              {{ data.current.condition.text }}
+              {{ props.mode === "day" ? data.current.condition.text : "Average for 3 days" }}
             </p>
           </div>
           <img
+              v-if="props.mode === 'day'"
               class="icon"
               :src="`https:${data.current.condition.icon}`"
               alt="weather icon"
           />
         </div>
+
         <div class="temp">
-          {{ Math.round(data.current.temp_c) }}°
+          {{ props.mode === "day" ? Math.round(data.current.temp_c) : forecast.day.avgtemp_c }}°
         </div>
+
         <div class="grid">
           <div class="item">
             <span>Feels like</span>
-            <b>{{ Math.round(data.current.feelslike_c) }}°C</b>
+            <b>{{ props.mode === "day" ? Math.round(data.current.feelslike_c) : forecast.day.avgtemp_c }}°C</b>
           </div>
           <div class="item">
             <span>Humidity</span>
-            <b>{{ data.current.humidity }}%</b>
+            <b>{{ props.mode === "day" ? data.current.humidity : forecast.day.avghumidity }}%</b>
           </div>
           <div class="item">
             <span>Wind</span>
-            <b>{{ data.current.wind_kph }} km/h</b>
+            <b>{{ props.mode === "day" ? data.current.wind_kph : forecast.day.maxwind_kph }} km/h</b>
           </div>
           <div class="item">
             <span>Pressure</span>
-            <b>{{ data.current.pressure_mb }} hPa</b>
+            <b>{{ props.mode === "day" ? data.current.pressure_mb : forecast.day.pressure_mb }} hPa</b>
           </div>
         </div>
       </div>
+
       <div class="card back">
-        <h2 class="forecast-title">Hourly Forecast</h2>
-        <div class="hourly-list">
+        <h2 class="forecast-title">
+          {{ props.mode === "day" ? "Hourly Forecast" : "3-Day Forecast" }}
+        </h2>
+
+        <div v-if="props.mode === 'day'" class="hourly-list">
           <div
-              v-for="hour in forecast.hour.slice(10, 24)"
+              v-for="hour in forecast.hour.slice(0, 24)"
               :key="hour.time_epoch"
               class="hour-item"
           >
-              <span class="hour">
-                {{ hour.time.split(' ')[1].slice(0, 5) }}
-              </span>
+            <span class="hour">{{ hour.time.split(' ')[1].slice(0, 5) }}</span>
             <div class="hour-center">
-              <img
-                  :src="`https:${hour.condition.icon}`"
-                  class="hour-icon"
-                  alt=""
-              />
-              <span class="condition">
-                  {{ hour.condition.text }}
-                </span>
+              <img :src="`https:${hour.condition.icon}`" class="hour-icon" alt="" />
+              <span class="condition">{{ hour.condition.text }}</span>
             </div>
-            <span class="hour-temp">
-                {{ Math.round(hour.temp_c) }}°
-              </span>
+            <span class="hour-temp">{{ Math.round(hour.temp_c) }}°</span>
+          </div>
+        </div>
+
+        <div v-else class="hourly-list">
+          <div
+              v-for="day in props.data.forecast.forecastday"
+              :key="day.date"
+              class="hour-item"
+          >
+            <span class="hour">{{ day.date }}</span>
+            <div class="hour-center">
+              <img :src="`https:${day.day.condition.icon}`" class="hour-icon" alt="" />
+              <span class="condition">{{ day.day.condition.text }}</span>
+            </div>
+            <span class="hour-temp">{{ Math.round(day.day.avgtemp_c) }}°C</span>
           </div>
         </div>
       </div>
@@ -87,8 +123,8 @@ const forecast = computed(() => {
 
 .card-inner {
   position: relative;
-  width: 470px;
-  height: 650px;
+  width: 430px;
+  height: 610px;
   transform-style: preserve-3d;
   transition: transform 0.9s;
 }
@@ -104,13 +140,13 @@ const forecast = computed(() => {
   padding: 34px;
   border-radius: 32px;
   background: rgba(255, 255, 255, 0.15);
-  backdrop-filter: blur(18px);
   border: 1px solid rgba(255, 255, 255, 0.2);
   box-shadow:
       0 10px 40px rgba(0, 0, 0, 0.25),
       inset 0 1px 1px rgba(255, 255, 255, 0.15);
   color: white;
   backface-visibility: hidden;
+  box-sizing: border-box;
 }
 
 .front {
