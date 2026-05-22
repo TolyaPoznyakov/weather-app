@@ -1,25 +1,86 @@
 <script setup>
-defineProps({
+import { ref, onMounted, onBeforeUnmount } from "vue";
+import { searchCities } from "@/composables/apiRequest.js";
+
+const props = defineProps({
   searchCity: String
 });
 
 const emit = defineEmits(["update:searchCity", "search"]);
 
+const suggestions = ref([]);
+const showSuggestions = ref(false);
+const loading = ref(false);
+const wrapper = ref(null);
+
+let timeout = null;
+
 const updateValue = (e) => {
-  emit("update:searchCity", e.target.value);
+  const value = e.target.value;
+  emit("update:searchCity", value);
+  clearTimeout(timeout);
+  if (!value) {
+    suggestions.value = [];
+    showSuggestions.value = false;
+    return;
+  }
+  timeout = setTimeout(async () => {
+    const res = await searchCities(value);
+    suggestions.value = Array.isArray(res) ? res : [];
+    showSuggestions.value = true;
+    loading.value = false;
+  }, 300);
 };
+
+const selectCity = (city) => {
+  emit("update:searchCity", city.name);
+  showSuggestions.value = false;
+  suggestions.value = [];
+  emit("search");
+};
+
+const handleClickOutside = (e) => {
+  if (wrapper.value && !wrapper.value.contains(e.target)) {
+    showSuggestions.value = false;
+  }
+};
+
+onMounted(() => {
+  document.addEventListener("click", handleClickOutside);
+});
+
+onBeforeUnmount(() => {
+  document.removeEventListener("click", handleClickOutside);
+});
 </script>
 
 <template>
   <div class="search">
-    <input
-        :value="searchCity"
-        type="text"
-        placeholder="Enter city..."
-        @input="updateValue"
-        @keyup.enter="$emit('search')"
-    />
-
+    <div class="input-wrapper" ref="wrapper">
+      <input
+          :value="searchCity"
+          type="text"
+          placeholder="Enter city..."
+          @input="updateValue"
+          @keyup.enter="$emit('search')"
+          @focus="showSuggestions = true"
+      />
+      <ul v-if="showSuggestions" class="dropdown">
+        <li v-if="loading" class="info">
+          Loading...
+        </li>
+        <li
+            v-for="city in suggestions"
+            :key="city.id || city.name"
+            @click="selectCity(city)"
+        >
+          {{ city.name }}, {{ city.country }}
+        </li>
+        <li v-if="!loading && !suggestions.length" class="info">
+          No results
+        </li>
+      </ul>
+    </div>
     <button @click="$emit('search')">
       Search
     </button>
@@ -31,6 +92,10 @@ const updateValue = (e) => {
   display: flex;
   gap: 14px;
   margin-bottom: 28px;
+}
+
+.input-wrapper {
+  position: relative;
 }
 
 .search input {
@@ -65,5 +130,37 @@ const updateValue = (e) => {
 
 .search button:hover {
   transform: translateY(-2px);
+  background: rgba(255,255,255,0.7);
+}
+
+
+.dropdown {
+  position: absolute;
+  top: 110%;
+  left: 0;
+  width: 500px;
+  background: rgba(0,0,0,0.85);
+  border-radius: 12px;
+  overflow: hidden;
+  z-index: 10;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.dropdown li {
+  padding: 10px 12px;
+  cursor: pointer;
+  color: white;
+}
+
+.dropdown li:hover {
+  background: rgba(255,255,255,0.1);
+}
+
+.info {
+  padding: 10px 12px;
+  opacity: 0.7;
+  cursor: default;
 }
 </style>

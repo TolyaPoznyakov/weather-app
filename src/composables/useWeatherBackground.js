@@ -28,6 +28,7 @@ const dayThemes = {
 };
 
 const nightThemes = {
+    sunny: "linear-gradient(135deg, #000000 0%, #050816 50%, #0b1f3a 100%)",
     clouds: "linear-gradient(135deg, #232526 0%, #414345 100%)",
     mist: "linear-gradient(135deg, #3e5151 0%, #decba4 100%)",
     rain: "linear-gradient(135deg, #141e30 0%, #243b55 100%)",
