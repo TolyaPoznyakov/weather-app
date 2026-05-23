@@ -1,5 +1,8 @@
 <script setup>
 import { defineEmits, defineProps } from "vue";
+import { useI18n } from "vue-i18n"
+
+const { t } = useI18n()
 
 const props = defineProps({
   modelValue: {
@@ -21,13 +24,13 @@ const setMode = (mode) => {
         :class="{ active: modelValue === 'day' }"
         @click="setMode('day')"
     >
-      Today
+      {{ t('forecast.today') }}
     </button>
     <button
         :class="{ active: modelValue === '3days' }"
         @click="setMode('3days')"
     >
-      3 Days
+      {{ t('forecast.threeDays') }}
     </button>
   </div>
 </template>
@@ -35,7 +38,7 @@ const setMode = (mode) => {
 <style scoped>
 .mode-switch {
   display: flex;
-  gap: 16px;
+  gap: 10px;
   padding: 8px;
   border-radius: 16px;
   background: rgba(0, 0, 0, 0.2);

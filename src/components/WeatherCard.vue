@@ -1,5 +1,8 @@
 <script setup>
 import { computed } from "vue";
+import { useI18n } from "vue-i18n"
+
+const { t } = useI18n()
 
 const props = defineProps({
   data: Object,
@@ -42,7 +45,7 @@ const forecast = computed(() => {
           <div>
             <h2 class="city">{{ data.location.name }}</h2>
             <p class="desc">
-              {{ props.mode === "day" ? data.current.condition.text : "Average for 3 days" }}
+              {{ props.mode === "day" ? data.current.condition.text : t('weatherCard.forecast') }}
             </p>
           </div>
           <img
@@ -59,19 +62,19 @@ const forecast = computed(() => {
 
         <div class="grid">
           <div class="item">
-            <span>Feels like</span>
+            <span>{{ t('weatherCard.feelsLike') }}</span>
             <b>{{ props.mode === "day" ? Math.round(data.current.feelslike_c) : forecast.day.avgtemp_c }}°C</b>
           </div>
           <div class="item">
-            <span>Humidity</span>
+            <span>{{ t('weatherCard.humidity') }}</span>
             <b>{{ props.mode === "day" ? data.current.humidity : forecast.day.avghumidity }}%</b>
           </div>
           <div class="item">
-            <span>Wind</span>
+            <span>{{ t('weatherCard.wind') }}</span>
             <b>{{ props.mode === "day" ? data.current.wind_kph : forecast.day.maxwind_kph }} km/h</b>
           </div>
           <div class="item">
-            <span>Pressure</span>
+            <span>{{ t('weatherCard.pressure') }}</span>
             <b>{{ props.mode === "day" ? data.current.pressure_mb : forecast.day.pressure_mb }} hPa</b>
           </div>
         </div>
@@ -79,7 +82,7 @@ const forecast = computed(() => {
 
       <div class="card back">
         <h2 class="forecast-title">
-          {{ props.mode === "day" ? "Hourly Forecast" : "3-Day Forecast" }}
+          {{ props.mode === "day" ? t('weatherCard.hourlyForecast') : t('weatherCard.threeDayForecast') }}
         </h2>
 
         <div v-if="props.mode === 'day'" class="hourly-list">

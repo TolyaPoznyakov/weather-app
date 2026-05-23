@@ -1,5 +1,6 @@
 <script setup>
 import { ref, onMounted, watch  } from "vue";
+import { useI18n } from "vue-i18n"
 import {
   Chart,
   LineController,
@@ -24,6 +25,7 @@ Chart.register(
     Legend
 );
 
+const { t } = useI18n()
 const props = defineProps({
   forecast: {
     type: Object,
@@ -55,7 +57,7 @@ function renderChart() {
 
   const datasets = [
     {
-      label: "Temperature °C",
+      label: t("chart.temperature"),
       data: chartData.temps,
       tension: 0.4,
       fill: true,
@@ -69,7 +71,7 @@ function renderChart() {
 
   if (props.mode === 'day') {
     datasets.push({
-      label: "Now",
+      label: t("chart.now"),
       data: chartData.temps.map((t, i) =>
           i === chartData.currentIndex ? t : null
       ),
@@ -131,7 +133,7 @@ watch(() => props.forecast, () => renderChart());
   <template>
     <div class="chart-container">
       <h2 class="chart-title">
-        {{ props.mode === 'day' ? 'Hourly Forecast' : 'Average forecast for 3 days' }}
+        {{ props.mode === 'day' ? t("chart.hourlyForecast") : t("chart.threeDayAverage") }}
       </h2>
       <canvas ref="chartRef"></canvas>
     </div>

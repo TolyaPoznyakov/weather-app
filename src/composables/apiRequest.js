@@ -1,7 +1,7 @@
 const API_URL = import.meta.env.VITE_API_URL
 const API_KEY = import.meta.env.VITE_API_KEY
 
-export const apiRequest = async (city, days) => {
+export const apiRequest = async (city = "auto:ip", days = 3) => {
     const response = await fetch(
         `${API_URL}/forecast.json?key=${API_KEY}&q=${city}&days=${days}`);
     const data = await response.json();

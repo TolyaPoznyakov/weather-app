@@ -1,6 +1,9 @@
 <script setup>
 import { ref, onMounted, onBeforeUnmount } from "vue";
 import { searchCities } from "@/composables/apiRequest.js";
+import { useI18n } from "vue-i18n"
+
+const { t } = useI18n()
 
 const props = defineProps({
   searchCity: String
@@ -60,14 +63,14 @@ onBeforeUnmount(() => {
       <input
           :value="searchCity"
           type="text"
-          placeholder="Enter city..."
+          :placeholder="t('search.placeholder')"
           @input="updateValue"
           @keyup.enter="$emit('search')"
           @focus="showSuggestions = true"
       />
       <ul v-if="showSuggestions" class="dropdown">
         <li v-if="loading" class="info">
-          Loading...
+          {{ t('common.loading') }}
         </li>
         <li
             v-for="city in suggestions"
@@ -77,12 +80,12 @@ onBeforeUnmount(() => {
           {{ city.name }}, {{ city.country }}
         </li>
         <li v-if="!loading && !suggestions.length" class="info">
-          No results
+          {{ t('search.noResults') }}
         </li>
       </ul>
     </div>
     <button @click="$emit('search')">
-      Search
+      {{ t('search.button') }}
     </button>
   </div>
 </template>

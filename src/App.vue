@@ -5,11 +5,14 @@ import WeatherSearch from "@/components/WeatherSearch.vue";
 import WeatherCard from "@/components/WeatherCard.vue";
 import WeatherChart from "@/components/WeatherChart.vue";
 import ForecastSwitch from "@/components/ForecastSwitch.vue";
+import LanguageSwitcher from "@/components/LanguageSwitcher.vue";
 import { getWeatherBackground } from "@/composables/useWeatherBackground.js";
+import { useI18n } from 'vue-i18n'
 
+const { t } = useI18n()
 
 const data = ref(null);
-const searchCity = ref("Kyiv");
+const searchCity = ref("");
 const forecastMode = ref("day");
 
 const fetchWeather = async (city) => {
@@ -21,25 +24,32 @@ const backgroundStyle = computed(() => ({
       data.value?.current?.condition?.code,
       data.value?.current?.is_day
   )
-
 }));
 
-onMounted(() => {
-  fetchWeather(searchCity.value);
-});
+onMounted(async () => {
+  data.value = await apiRequest("auto:ip", 3)
+  searchCity.value = data.value.location.name
+})
 </script>
 
 <template>
   <div class="page" :style="backgroundStyle">
-    <h1 class="title">Weather Forecast</h1>
+    <div class="weather-title-lang">
+      <h1 class="title">
+        <span class="big-w">W</span>eather Forecast
+      </h1>
+      <div class="weather-toolbar">
+        <ForecastSwitch
+            v-model="forecastMode"
+        />
+        <LanguageSwitcher />
+      </div>
+    </div>
     <div class="weather-switch-search">
       <WeatherSearch
           :searchCity="searchCity"
           @update:searchCity="searchCity = $event"
           @search="fetchWeather(searchCity)"
-      />
-      <ForecastSwitch
-          v-model="forecastMode"
       />
     </div>
     <div  v-if="data" class="weather-block">
@@ -53,7 +63,7 @@ onMounted(() => {
       />
     </div>
     <div v-else class="loading">
-      Loading...
+      {{ t('common.loading') }}
     </div>
   </div>
 </template>
@@ -69,6 +79,17 @@ onMounted(() => {
   transition: background 0.6s ease;
 }
 
+.weather-toolbar  {
+  display: flex;
+  gap: 20px;
+}
+
+.weather-title-lang {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
 .weather-switch-search  {
   display: flex;
   justify-content: space-between;
@@ -80,6 +101,12 @@ onMounted(() => {
   gap: 20px;
 }
 
+.loading {
+  color: white;
+  font-size: 24px;
+  font-weight: 700;
+}
+
 .title {
   color: white;
   margin-bottom: 28px;
@@ -89,9 +116,15 @@ onMounted(() => {
   text-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
 }
 
-.loading {
-  color: white;
-  font-size: 24px;
-  font-weight: 700;
+
+.big-w {
+  font-size: 52px;
+  line-height: 1;
+  color: transparent;
+  -webkit-text-stroke: 2.5px white;
+  background: inherit;
+  background-clip: text;
+  -webkit-background-clip: text;
+  display: inline-block;
 }
 </style>
