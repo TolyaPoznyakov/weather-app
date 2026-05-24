@@ -18,13 +18,13 @@ const weatherMap = {
 };
 
 const dayThemes = {
-    sunny: "linear-gradient(135deg, #f6d365 0%, #fda085 100%)",
-    clouds: "linear-gradient(135deg, #8e9eab 0%, #eef2f3 100%)",
+    sunny: "linear-gradient(135deg, #d7b98c 0%, #d2a679 100%)",
+    clouds: "linear-gradient(135deg, #757f9a 50%, #d7dde8 100%)",
     mist: "linear-gradient(135deg, #757f9a 0%, #d7dde8 100%)",
     rain: "linear-gradient(135deg, #314755 0%, #26a0da 100%)",
     thunder: "linear-gradient(135deg, #232526 0%, #414345 100%)",
     snow: "linear-gradient(135deg, #e6dada 0%, #274046 100%)",
-    default: "linear-gradient(135deg, #74ebd5 0%, #acb6e5 100%)"
+    default: "linear-gradient(135deg, #6d8b98 0%, #8ca6b8 100%)"
 };
 
 const nightThemes = {

@@ -24,6 +24,9 @@
     "noResults": "No results"
   },
   "common": {
-    "loading": "Loading..."
+    "loading": "Loading...",
+    "favorites": "Favorites",
+    "w": "W",
+    "eatherForecast": "eather Forecast"
   }
 }
