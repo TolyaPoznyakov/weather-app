@@ -1,6 +1,8 @@
 <script setup>
-import { computed } from "vue";
+import { ref, computed } from "vue";
 import { useI18n } from "vue-i18n"
+
+const emit = defineEmits(["toggle-favorite"]);
 
 const { t } = useI18n()
 
@@ -11,6 +13,9 @@ const props = defineProps({
     default: "day"
   }
 });
+
+const isFlipped = ref(false);
+const isFavorite = ref(false);
 
 const forecast = computed(() => {
   if (!props.data?.forecast?.forecastday) return null;
@@ -38,8 +43,8 @@ const forecast = computed(() => {
 </script>
 
 <template>
-  <div class="card-wrapper">
-    <div class="card-inner">
+  <div class="card-wrapper" @click="isFlipped = !isFlipped">
+    <div :class="{ flipped: isFlipped }" class="card-inner">
       <div class="card front">
         <div class="top">
           <div>
@@ -78,6 +83,28 @@ const forecast = computed(() => {
             <b>{{ props.mode === "day" ? data.current.pressure_mb : forecast.day.pressure_mb }} hPa</b>
           </div>
         </div>
+        <div>
+
+        </div>
+        <button
+            class="favorite-btn"
+            :class="{ active: isFavorite }"
+            @click.stop="() => {
+    isFavorite = !isFavorite;
+    emit('toggle-favorite', data);
+  }"
+        >
+          <svg width="40" height="40" viewBox="0 0 24 24" class="star-icon">
+            <path
+                d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 22 12 18.56 5.82 22 7 14.14 2 9.27l6.91-1.01L12 2z"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.5"
+                stroke-linejoin="round"
+                stroke-linecap="round"
+            />
+          </svg>
+        </button>
       </div>
 
       <div class="card back">
@@ -122,6 +149,12 @@ const forecast = computed(() => {
 <style scoped>
 .card-wrapper {
   perspective: 1400px;
+  transition: transform 0.9s;
+  cursor: pointer;
+}
+
+.card-wrapper:hover{
+  transform: scale(1.02);
 }
 
 .card-inner {
@@ -132,7 +165,7 @@ const forecast = computed(() => {
   transition: transform 0.9s;
 }
 
-.card-wrapper:hover .card-inner {
+.card-inner.flipped {
   transform: rotateY(180deg);
 }
 
@@ -154,6 +187,8 @@ const forecast = computed(() => {
 
 .front {
   z-index: 2;
+  display: flex;
+  flex-direction: column;
 }
 
 .back {
@@ -287,4 +322,38 @@ const forecast = computed(() => {
   font-size: 24px;
   font-weight: 800;
 }
+
+.favorite-btn {
+  margin-left: auto;
+  margin-top: auto;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+}
+
+.favorite-btn svg {
+  width: 35px;
+  height: 35px;
+}
+
+.favorite-btn:hover {
+  transform: scale(1.1);
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+}
+
+.favorite-btn.active {
+  color: #ffd54a;
+}
+
 </style>
