@@ -143,8 +143,8 @@ watch(() => props.forecast, () => renderChart());
 .chart-container {
   position: relative;
   width: 100%;
-  height: 540px;
-  padding: 34px;
+  height: 490px;
+  padding: 35px;
   border-radius: 32px;
   background: rgba(255, 255, 255, 0.12);
   backdrop-filter: blur(18px);

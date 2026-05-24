@@ -8,15 +8,15 @@ import ForecastSwitch from "@/components/ForecastSwitch.vue";
 import LanguageSwitcher from "@/components/LanguageSwitcher.vue";
 import NavBar from "@/components/NavBar.vue";
 import { getWeatherBackground } from "@/composables/useWeatherBackground.js";
-import { useI18n } from 'vue-i18n'
+import { useI18n } from "vue-i18n";
 
-const { t } = useI18n()
+const { t } = useI18n();
 
 const data = ref(null);
 const searchCity = ref("");
 const forecastMode = ref("day");
 const currentPage = ref("weather");
-
+const favorites = ref([]);
 
 const fetchWeather = async (city) => {
   data.value = await apiRequest(city, 3);
@@ -25,14 +25,21 @@ const fetchWeather = async (city) => {
 const backgroundStyle = computed(() => ({
   background: getWeatherBackground(
       data.value?.current?.condition?.code,
-      data.value?.current?.is_day
-  )
+      data.value?.current?.is_day,
+  ),
 }));
 
+const loadFavorites = () => {
+  favorites.value =
+      JSON.parse(localStorage.getItem("favorites")) || [];
+};
+
 onMounted(async () => {
-  data.value = await apiRequest("auto:ip", 3)
-  searchCity.value = data.value.location.name
-})
+  data.value = await apiRequest("auto:ip", 3);
+  searchCity.value = data.value.location.name;
+
+  loadFavorites();
+});
 </script>
 
 <template>
@@ -43,10 +50,19 @@ onMounted(async () => {
           @update:currentPage="currentPage = $event"
       />
       <div v-if="currentPage === 'weather'" class="weather-toolbar">
-        <ForecastSwitch
-            v-model="forecastMode"
-        />
+        <ForecastSwitch v-model="forecastMode" />
         <LanguageSwitcher />
+      </div>
+    </div>
+    <div v-if="currentPage === 'favorite'">
+      <div class="favorite-list">
+        <WeatherCard
+            v-for="favorite in favorites"
+            :key="favorite.location.name"
+            :data="favorite"
+            :mode="forecastMode"
+            @favorites-updated="loadFavorites"
+        />
       </div>
     </div>
     <div v-if="currentPage === 'weather'">
@@ -58,18 +74,14 @@ onMounted(async () => {
         />
       </div>
       <div>
-        <div  v-if="data" class="weather-block">
-          <WeatherCard
-              :data="data"
-              :mode="forecastMode"
-          />
-          <WeatherChart
-              :forecast="data.forecast"
-              :mode="forecastMode"
-          />
+        <div v-if="data" class="weather-block">
+          <WeatherCard  :data="data"
+                        :mode="forecastMode"
+                        @favorites-updated="loadFavorites" />
+          <WeatherChart :forecast="data.forecast" :mode="forecastMode" />
         </div>
         <div v-else class="loading">
-          {{ t('common.loading') }}
+          {{ t("common.loading") }}
         </div>
       </div>
     </div>
@@ -77,7 +89,6 @@ onMounted(async () => {
 </template>
 
 <style scoped>
-
 .page {
   display: flex;
   flex-direction: column;
@@ -87,7 +98,7 @@ onMounted(async () => {
   transition: background 0.6s ease;
 }
 
-.weather-toolbar  {
+.weather-toolbar {
   display: flex;
   gap: 20px;
 }
@@ -98,13 +109,13 @@ onMounted(async () => {
   align-items: center;
 }
 
-.weather-search  {
+.weather-search {
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
 
-.weather-block  {
+.weather-block {
   display: flex;
   gap: 20px;
 }
@@ -113,5 +124,12 @@ onMounted(async () => {
   color: white;
   font-size: 24px;
   font-weight: 700;
+}
+
+.favorite-list  {
+  display: flex;
+  gap: 15px;
+  flex-wrap: wrap;
+
 }
 </style>
