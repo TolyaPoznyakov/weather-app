@@ -1,6 +1,7 @@
 <script setup>
 import { apiRequest } from "@/composables/apiRequest.js";
 import { ref, onMounted, computed } from "vue";
+import ConfirmModal from "@/components/ConfirmModal.vue"
 import WeatherSearch from "@/components/WeatherSearch.vue";
 import WeatherCard from "@/components/WeatherCard.vue";
 import WeatherChart from "@/components/WeatherChart.vue";
@@ -19,7 +20,19 @@ const currentPage = ref("weather");
 const favorites = ref([]);
 
 const fetchWeather = async (city) => {
-  data.value = await apiRequest(city, 3);
+  try {
+    errorMessage.value = "";
+    const response = await apiRequest(city, 3);
+    if (!response || response.error) {
+      data.value = null;
+      errorMessage.value = "City not found";
+      return;
+    }
+    data.value = response;
+  } catch (error) {
+    data.value = null;
+    errorMessage.value = "City not found";
+  }
 };
 
 const backgroundStyle = computed(() => ({
@@ -85,6 +98,7 @@ onMounted(async () => {
         </div>
       </div>
     </div>
+    <ConfirmModal />
   </div>
 </template>
 
@@ -122,8 +136,9 @@ onMounted(async () => {
 
 .loading {
   color: white;
-  font-size: 24px;
+  font-size: 40px;
   font-weight: 700;
+  margin: 5vh;
 }
 
 .favorite-list  {
