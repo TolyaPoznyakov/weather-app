@@ -18,6 +18,8 @@ const searchCity = ref("");
 const forecastMode = ref("day");
 const currentPage = ref("weather");
 const favorites = ref([]);
+const errorMessage = ref("");
+
 
 const fetchWeather = async (city) => {
   try {
@@ -92,6 +94,9 @@ onMounted(async () => {
                         :mode="forecastMode"
                         @favorites-updated="loadFavorites" />
           <WeatherChart :forecast="data.forecast" :mode="forecastMode" />
+        </div>
+        <div v-else-if="errorMessage" class="loading">
+          {{ errorMessage }}
         </div>
         <div v-else class="loading">
           {{ t("common.loading") }}
