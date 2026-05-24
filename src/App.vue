@@ -1,11 +1,13 @@
 <script setup>
 import { apiRequest } from "@/composables/apiRequest.js";
 import { ref, onMounted, computed } from "vue";
+import ConfirmModal from "@/components/ConfirmModal.vue"
 import WeatherSearch from "@/components/WeatherSearch.vue";
 import WeatherCard from "@/components/WeatherCard.vue";
 import WeatherChart from "@/components/WeatherChart.vue";
 import ForecastSwitch from "@/components/ForecastSwitch.vue";
 import LanguageSwitcher from "@/components/LanguageSwitcher.vue";
+import CardsList from "@/components/CardsList.vue";
 import { getWeatherBackground } from "@/composables/useWeatherBackground.js";
 import { useI18n } from 'vue-i18n'
 
@@ -14,9 +16,22 @@ const { t } = useI18n()
 const data = ref(null);
 const searchCity = ref("");
 const forecastMode = ref("day");
+const errorMessage = ref("");
 
 const fetchWeather = async (city) => {
-  data.value = await apiRequest(city, 3);
+  try {
+    errorMessage.value = "";
+    const response = await apiRequest(city, 3);
+    if (!response || response.error) {
+      data.value = null;
+      errorMessage.value = "City not found";
+      return;
+    }
+    data.value = response;
+  } catch (error) {
+    data.value = null;
+    errorMessage.value = "City not found";
+  }
 };
 
 const backgroundStyle = computed(() => ({
@@ -26,6 +41,11 @@ const backgroundStyle = computed(() => ({
   )
 }));
 
+const handleCitySelect = (city) => {
+  searchCity.value = city
+  fetchWeather(city)
+}
+
 onMounted(async () => {
   data.value = await apiRequest("auto:ip", 3)
   searchCity.value = data.value.location.name
@@ -34,37 +54,46 @@ onMounted(async () => {
 
 <template>
   <div class="page" :style="backgroundStyle">
-    <div class="weather-title-lang">
-      <h1 class="title">
-        <span class="big-w">W</span>eather Forecast
-      </h1>
-      <div class="weather-toolbar">
-        <ForecastSwitch
-            v-model="forecastMode"
+    <div>
+      <div class="weather-title-lang">
+        <h1 class="title">
+          <span class="big-w">W</span>eather Forecast
+        </h1>
+        <div class="weather-toolbar">
+          <ForecastSwitch
+              v-model="forecastMode"
+          />
+          <LanguageSwitcher />
+        </div>
+      </div>
+      <div class="weather-switch-search">
+        <WeatherSearch
+            :searchCity="searchCity"
+            @update:searchCity="searchCity = $event"
+            @search="fetchWeather(searchCity)"
         />
-        <LanguageSwitcher />
+      </div>
+      <div  v-if="data" class="weather-block">
+        <WeatherCard
+            :data="data"
+            :mode="forecastMode"
+        />
+        <WeatherChart
+            :forecast="data.forecast"
+            :mode="forecastMode"
+        />
+      </div>
+      <div v-else-if="errorMessage" class="loading">
+        {{ errorMessage }}
+      </div>
+      <div v-else class="loading">
+        {{ t('common.loading') }}
       </div>
     </div>
-    <div class="weather-switch-search">
-      <WeatherSearch
-          :searchCity="searchCity"
-          @update:searchCity="searchCity = $event"
-          @search="fetchWeather(searchCity)"
-      />
+    <div>
+      <CardsList @selectCity="handleCitySelect"/>
     </div>
-    <div  v-if="data" class="weather-block">
-      <WeatherCard
-          :data="data"
-          :mode="forecastMode"
-      />
-      <WeatherChart
-          :forecast="data.forecast"
-          :mode="forecastMode"
-      />
-    </div>
-    <div v-else class="loading">
-      {{ t('common.loading') }}
-    </div>
+    <ConfirmModal />
   </div>
 </template>
 
@@ -103,8 +132,9 @@ onMounted(async () => {
 
 .loading {
   color: white;
-  font-size: 24px;
+  font-size: 40px;
   font-weight: 700;
+  margin: 5vh;
 }
 
 .title {

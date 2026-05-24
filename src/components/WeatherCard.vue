@@ -39,7 +39,7 @@ const forecast = computed(() => {
 
 <template>
   <div class="card-wrapper">
-    <div class="card-inner">
+    <div v-if="data" class="card-inner">
       <div class="card front">
         <div class="top">
           <div>
