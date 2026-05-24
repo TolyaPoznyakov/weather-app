@@ -1,16 +1,20 @@
 <script setup>
-import { computed } from "vue";
-import { useI18n } from "vue-i18n"
+import { ref, computed, onMounted, watch  } from "vue";
+import { useI18n } from "vue-i18n";
 
-const { t } = useI18n()
+const emit = defineEmits(["favorites-updated"]);
+const { t } = useI18n();
 
 const props = defineProps({
   data: Object,
   mode: {
     type: String,
-    default: "day"
-  }
+    default: "day",
+  },
 });
+
+const isFlipped = ref(false);
+const isFavorite = ref(false);
 
 const forecast = computed(() => {
   if (!props.data?.forecast?.forecastday) return null;
@@ -29,17 +33,78 @@ const forecast = computed(() => {
         avgtemp_c: avgTemp,
         avghumidity: avgHumidity,
         maxwind_kph: avgWind,
-        pressure_mb: avgPressure
+        pressure_mb: avgPressure,
       },
-      mode: "3days"
+      mode: "3days",
     };
   }
 });
+
+const addToFavorites = () => {
+  const favorites = JSON.parse(localStorage.getItem("favorites")) || [];
+
+  const exists = favorites.some(
+      (favorite) =>
+          favorite.location.name === props.data.location.name &&
+          favorite.location.country === props.data.location.country,
+  );
+
+  if (exists) {
+    const updatedFavorites = favorites.filter(
+        (favorite) =>
+            !(
+                favorite.location.name === props.data.location.name &&
+                favorite.location.country === props.data.location.country
+            ),
+    );
+
+    localStorage.setItem(
+        "favorites",
+        JSON.stringify(updatedFavorites),
+    );
+    emit("favorites-updated");
+    isFavorite.value = false;
+    return;
+  }
+  if (favorites.length >= 5) {
+    favoriteCities.value = favorites;
+    showLimitModal.value = true;
+    return;
+  }
+  const updatedFavorites = [...favorites, props.data];
+  localStorage.setItem(
+      "favorites",
+      JSON.stringify(updatedFavorites),
+  );
+  emit("favorites-updated");
+  isFavorite.value = true;
+};
+
+const checkIsFavorite = () => {
+  const favorites = JSON.parse(localStorage.getItem("favorites")) || [];
+
+  isFavorite.value = favorites.some(
+      (favorite) =>
+          favorite.location.name === props.data.location.name &&
+          favorite.location.country === props.data.location.country,
+  );
+};
+
+onMounted(() => {
+  checkIsFavorite();
+});
+
+watch(
+    () => props.data,
+    () => {
+      checkIsFavorite();
+    },
+);
 </script>
 
 <template>
-  <div class="card-wrapper">
-    <div class="card-inner">
+  <div class="card-wrapper" @click="isFlipped = !isFlipped">
+    <div :class="{ flipped: isFlipped }" class="card-inner">
       <div class="card front">
         <div class="top">
           <div>
@@ -60,6 +125,7 @@ const forecast = computed(() => {
           {{ props.mode === "day" ? Math.round(data.current.temp_c) : forecast.day.avgtemp_c }}°
         </div>
 
+
         <div class="grid">
           <div class="item">
             <span>{{ t('weatherCard.feelsLike') }}</span>
@@ -78,6 +144,22 @@ const forecast = computed(() => {
             <b>{{ props.mode === "day" ? data.current.pressure_mb : forecast.day.pressure_mb }} hPa</b>
           </div>
         </div>
+        <button
+            class="favorite-btn"
+            :class="{ active: isFavorite }"
+            @click.stop="addToFavorites"
+        >
+          <svg width="40" height="40" viewBox="0 0 24 24" class="star-icon">
+            <path
+                d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 22 12 18.56 5.82 22 7 14.14 2 9.27l6.91-1.01L12 2z"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.5"
+                stroke-linejoin="round"
+                stroke-linecap="round"
+            />
+          </svg>
+        </button>
       </div>
 
       <div class="card back">
@@ -122,17 +204,23 @@ const forecast = computed(() => {
 <style scoped>
 .card-wrapper {
   perspective: 1400px;
+  transition: transform 0.9s;
+  cursor: pointer;
+}
+
+.card-wrapper:hover {
+  transform: scale(1.02);
 }
 
 .card-inner {
   position: relative;
-  width: 430px;
-  height: 610px;
+  width: 390px;
+  height: 560px;
   transform-style: preserve-3d;
   transition: transform 0.9s;
 }
 
-.card-wrapper:hover .card-inner {
+.card-inner.flipped {
   transform: rotateY(180deg);
 }
 
@@ -140,7 +228,7 @@ const forecast = computed(() => {
   position: absolute;
   width: 100%;
   height: 100%;
-  padding: 34px;
+  padding: 30px;
   border-radius: 32px;
   background: rgba(255, 255, 255, 0.15);
   border: 1px solid rgba(255, 255, 255, 0.2);
@@ -154,6 +242,8 @@ const forecast = computed(() => {
 
 .front {
   z-index: 2;
+  display: flex;
+  flex-direction: column;
 }
 
 .back {
@@ -169,24 +259,24 @@ const forecast = computed(() => {
 }
 
 .city {
-  font-size: 34px;
+  font-size: 30px;
   font-weight: 800;
 }
 
 .desc {
   margin-top: 8px;
-  font-size: 17px;
+  font-size: 15px;
   opacity: 0.9;
 }
 
 .icon {
-  width: 90px;
-  height: 90px;
+  width: 80px;
+  height: 80px;
 }
 
 .temp {
-  margin: 30px 0;
-  font-size: 110px;
+  margin: 24px 0;
+  font-size: 95px;
   font-weight: 900;
   line-height: 1;
 }
@@ -194,12 +284,12 @@ const forecast = computed(() => {
 .grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 18px;
+  gap: 16px;
 }
 
 .item {
-  padding: 20px;
-  border-radius: 20px;
+  padding: 18px;
+  border-radius: 18px;
   background: rgba(255, 255, 255, 0.12);
   text-align: center;
   transition: 0.25s;
@@ -207,31 +297,31 @@ const forecast = computed(() => {
 
 .item:hover {
   transform: translateY(-4px);
-  background: rgba(255,255,255,0.18);
+  background: rgba(255, 255, 255, 0.18);
 }
 
 .item span {
   display: block;
-  margin-bottom: 10px;
-  font-size: 14px;
+  margin-bottom: 8px;
+  font-size: 13px;
   opacity: 0.75;
 }
 
 .item b {
-  font-size: 18px;
+  font-size: 16px;
 }
 
 .forecast-title {
   text-align: center;
-  margin-bottom: 24px;
-  font-size: 34px;
+  margin-bottom: 20px;
+  font-size: 30px;
   font-weight: 800;
 }
 
 .hourly-list {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
   overflow-y: auto;
   padding-right: 4px;
 }
@@ -241,7 +331,7 @@ const forecast = computed(() => {
 }
 
 .hourly-list::-webkit-scrollbar-thumb {
-  background: rgba(255,255,255,0.25);
+  background: rgba(255, 255, 255, 0.25);
   border-radius: 20px;
 }
 
@@ -249,42 +339,75 @@ const forecast = computed(() => {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 14px 18px;
-  border-radius: 18px;
-  background: rgba(255,255,255,0.12);
+  padding: 12px 16px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.12);
   transition: 0.25s;
 }
 
 .hour-item:hover {
   transform: translateY(-2px);
-  background: rgba(255,255,255,0.18);
+  background: rgba(255, 255, 255, 0.18);
 }
 
 .hour {
-  width: 70px;
-  font-size: 17px;
+  width: 65px;
+  font-size: 15px;
   font-weight: 700;
 }
 
 .hour-center {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   flex: 1;
 }
 
 .hour-icon {
-  width: 42px;
-  height: 42px;
+  width: 36px;
+  height: 36px;
 }
 
 .condition {
-  font-size: 14px;
+  font-size: 13px;
   opacity: 0.85;
 }
 
 .hour-temp {
-  font-size: 24px;
+  font-size: 21px;
   font-weight: 800;
+}
+
+.favorite-btn {
+  margin-left: auto;
+  margin-top: auto;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+}
+
+.favorite-btn svg {
+  width: 30px;
+  height: 30px;
+}
+
+.favorite-btn:hover {
+  transform: scale(1.1);
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+}
+
+.favorite-btn.active {
+  color: #ffd54a;
 }
 </style>
