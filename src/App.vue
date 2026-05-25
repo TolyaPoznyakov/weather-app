@@ -1,7 +1,6 @@
 <script setup>
 import { apiRequest } from "@/composables/apiRequest.js";
 import { ref, onMounted, computed } from "vue";
-import ConfirmModal from "@/components/ConfirmModal.vue"
 import WeatherSearch from "@/components/WeatherSearch.vue";
 import WeatherCard from "@/components/WeatherCard.vue";
 import WeatherChart from "@/components/WeatherChart.vue";
@@ -10,6 +9,7 @@ import LanguageSwitcher from "@/components/LanguageSwitcher.vue";
 import NavBar from "@/components/NavBar.vue";
 import { getWeatherBackground } from "@/composables/useWeatherBackground.js";
 import { useI18n } from "vue-i18n";
+import BaseModal from "@/components/BaseModal.vue";
 
 const { t } = useI18n();
 
@@ -103,7 +103,7 @@ onMounted(async () => {
         </div>
       </div>
     </div>
-    <ConfirmModal />
+    <BaseModal/>
   </div>
 </template>
 
@@ -141,7 +141,7 @@ onMounted(async () => {
 
 .loading {
   color: white;
-  font-size: 40px;
+  font-size: 34px;
   font-weight: 700;
   margin: 5vh;
 }

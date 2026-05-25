@@ -1,6 +1,9 @@
 <script setup>
 import { ref, computed, onMounted, watch  } from "vue";
 import { useI18n } from "vue-i18n";
+import { useModal } from "@/composables/useModal";
+
+const modal = useModal();
 
 const emit = defineEmits(["favorites-updated"]);
 const { t } = useI18n();
@@ -40,7 +43,7 @@ const forecast = computed(() => {
   }
 });
 
-const addToFavorites = () => {
+const addToFavorites = async () => {
   const favorites = JSON.parse(localStorage.getItem("favorites")) || [];
 
   const exists = favorites.some(
@@ -67,8 +70,10 @@ const addToFavorites = () => {
     return;
   }
   if (favorites.length >= 5) {
-    favoriteCities.value = favorites;
-    showLimitModal.value = true;
+    await modal.alert(
+        "You already have 5 cities. Remove one first.",
+        "Favorites limit"
+    );
     return;
   }
   const updatedFavorites = [...favorites, props.data];

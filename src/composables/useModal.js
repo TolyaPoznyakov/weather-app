@@ -1,37 +1,42 @@
-import { reactive } from "vue"
+import { reactive } from "vue";
 
 const state = reactive({
     isOpen: false,
+    title: "",
     message: "",
     resolve: null,
-})
+    type: "alert",
+});
 
 export function useModal() {
 
-    const confirm = (message) => {
-        state.isOpen = true
-        state.message = message
+    const open = ({ title, message, type = "alert" }) => {
+        state.title = title;
+        state.message = message;
+        state.type = type;
+        state.isOpen = true;
+
         return new Promise((resolve) => {
-            state.resolve = resolve
-        })
-    }
+            state.resolve = resolve;
+        });
+    };
 
-    const confirmYes = () => {
-        state.isOpen = false
-        state.resolve?.(true)
-        state.resolve = null
-    }
+    const alert = (message, title = "Info") => {
+        return open({ title, message, type: "alert" });
+    };
 
-    const confirmNo = () => {
-        state.isOpen = false
-        state.resolve?.(false)
-        state.resolve = null
-    }
+    const close = (result = true) => {
+        state.isOpen = false;
+
+        if (state.resolve) {
+            state.resolve(result);
+            state.resolve = null;
+        }
+    };
 
     return {
         state,
-        confirm,
-        confirmYes,
-        confirmNo,
-    }
+        alert,
+        close,
+    };
 }
