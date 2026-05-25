@@ -71,8 +71,8 @@ const addToFavorites = async () => {
   }
   if (favorites.length >= 5) {
     await modal.alert(
-        "You already have 5 cities. Remove one first.",
-        "Favorites limit"
+        t('common.modal.desc'),
+        t('common.modal.title')
     );
     return;
   }

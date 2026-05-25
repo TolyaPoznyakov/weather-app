@@ -24,9 +24,14 @@
     "noResults": "No results"
   },
   "common": {
+    "modal": {
+      "title": "Favorites limit",
+      "desc": "You already have 5 cities. Remove one first."
+    },
     "loading": "Loading...",
     "favorites": "Favorites",
     "w": "W",
-    "eatherForecast": "eather Forecast"
+    "eatherForecast": "eather Forecast",
+    "cityNotFound": "City not found"
   }
 }

@@ -27,13 +27,13 @@ const fetchWeather = async (city) => {
     const response = await apiRequest(city, 3);
     if (!response || response.error) {
       data.value = null;
-      errorMessage.value = "City not found";
+      errorMessage.value = t('common.cityNotFound');
       return;
     }
     data.value = response;
   } catch (error) {
     data.value = null;
-    errorMessage.value = "City not found";
+    errorMessage.value = t('common.cityNotFound');
   }
 };
 
@@ -71,13 +71,15 @@ onMounted(async () => {
     </div>
     <div v-if="currentPage === 'favorite'">
       <div class="favorite-list">
-        <WeatherCard
-            v-for="favorite in favorites"
-            :key="favorite.location.name"
-            :data="favorite"
-            :mode="forecastMode"
-            @favorites-updated="loadFavorites"
-        />
+        <TransitionGroup name="fade" tag="div" class="favorite-list">
+          <WeatherCard
+              v-for="favorite in favorites"
+              :key="favorite.location.name"
+              :data="favorite"
+              :mode="forecastMode"
+              @favorites-updated="loadFavorites"
+          />
+        </TransitionGroup>
       </div>
     </div>
     <div v-if="currentPage === 'weather'">
@@ -150,6 +152,15 @@ onMounted(async () => {
   display: flex;
   gap: 15px;
   flex-wrap: wrap;
+}
 
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.15s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
 }
 </style>
