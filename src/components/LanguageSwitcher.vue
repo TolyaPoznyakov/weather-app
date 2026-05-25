@@ -54,8 +54,9 @@ const toggle = () => {
 .lang-btn {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 8px;
-  padding: 8px 14px;
+  padding: 10px 14px;
   border-radius: 12px;
   border: none;
   cursor: pointer;
@@ -63,6 +64,7 @@ const toggle = () => {
   color: white;
   font-size: 16px;
   font-weight: 600;
+  min-width: 150px;
 }
 
 .arrow {
@@ -74,22 +76,34 @@ const toggle = () => {
   position: absolute;
   top: calc(100% + 6px);
   left: 0;
-  width: 120px;
+  width: 100%;
+  min-width: 150px;
   background: rgba(0, 0, 0, 0.5);
   border-radius: 12px;
   overflow: hidden;
   z-index: 999;
+  backdrop-filter: blur(12px);
 }
 
 .item {
   display: flex;
   gap: 10px;
-  padding: 10px;
+  padding: 12px;
   cursor: pointer;
   color: white;
 }
 
 .item:hover {
   background: #333;
+}
+
+@media (max-width: 480px) {
+  .lang-switcher {
+    width: 100%;
+  }
+
+  .lang-btn {
+    width: 100%;
+  }
 }
 </style>

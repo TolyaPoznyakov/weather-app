@@ -108,7 +108,6 @@ onMounted(async () => {
     <BaseModal/>
   </div>
 </template>
-
 <style scoped>
 .page {
   display: flex;
@@ -117,35 +116,32 @@ onMounted(async () => {
   padding: 30px;
   font-family: system-ui, sans-serif;
   transition: background 0.6s ease;
+  overflow-x: hidden;
 }
 
 .weather-toolbar {
   display: flex;
   gap: 20px;
+  align-items: center;
+  flex-wrap: wrap;
 }
 
 .weather-title-lang {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
+  gap: 24px;
+  margin-bottom: 24px;
 }
 
 .weather-search {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+  width: 100%;
 }
 
 .weather-block {
   display: flex;
   gap: 20px;
-}
-
-.loading {
-  color: white;
-  font-size: 34px;
-  font-weight: 700;
-  margin: 5vh;
+  align-items: stretch;
 }
 
 .favorite-list {
@@ -155,13 +151,51 @@ onMounted(async () => {
   justify-content: center;
 }
 
-.fade-enter-active,
-.fade-leave-active {
-  transition: opacity 0.15s ease;
+@media (max-width: 1200px) {
+  .weather-block {
+    flex-direction: column;
+  }
 }
 
-.fade-enter-from,
-.fade-leave-to {
-  opacity: 0;
+@media (max-width: 768px) {
+  .page {
+    padding: 20px;
+  }
+
+  .weather-title-lang {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 18px;
+  }
+
+  .weather-toolbar {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .weather-block {
+    flex-direction: column;
+    gap: 18px;
+  }
+}
+
+@media (max-width: 480px) {
+  .page {
+    padding: 14px;
+  }
+
+  .weather-block {
+    gap: 0;
+  }
+
+  .weather-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .favorite-list {
+    gap: 12px;
+  }
 }
 </style>

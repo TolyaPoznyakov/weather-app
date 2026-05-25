@@ -91,19 +91,22 @@ onBeforeUnmount(() => {
 </template>
 
 <style scoped>
-.search {
-  display: flex;
-  gap: 14px;
-  margin-bottom: 28px;
-}
+ .search {
+   display: flex;
+   gap: 14px;
+   margin-bottom: 28px;
+   width: 100%;
+ }
 
 .input-wrapper {
   position: relative;
+  flex: 1;
 }
 
 .search input {
-  width: 500px;
-  height: 30px;
+  width: 100%;
+  min-width: 0;
+  height: 58px;
   padding: 14px 18px;
   border: none;
   border-radius: 16px;
@@ -113,6 +116,7 @@ onBeforeUnmount(() => {
   font-size: 18px;
   font-weight: 800;
   backdrop-filter: blur(10px);
+  box-sizing: border-box;
 }
 
 .search input::placeholder {
@@ -122,6 +126,7 @@ onBeforeUnmount(() => {
 
 .search button {
   width: 120px;
+  min-width: 120px;
   padding: 14px 20px;
   border: none;
   border-radius: 16px;
@@ -136,7 +141,6 @@ onBeforeUnmount(() => {
   background: rgba(255,255,255,0.7);
 }
 
-
 .dropdown {
   position: absolute;
   top: 110%;
@@ -145,16 +149,18 @@ onBeforeUnmount(() => {
   background: rgba(0,0,0,0.85);
   border-radius: 12px;
   overflow: hidden;
-  z-index: 10;
+  z-index: 1000;
   list-style: none;
   padding: 0;
   margin: 0;
+  backdrop-filter: blur(12px);
 }
 
 .dropdown li {
-  padding: 10px 12px;
+  padding: 12px;
   cursor: pointer;
   color: white;
+  word-break: break-word;
 }
 
 .dropdown li:hover {
@@ -162,8 +168,25 @@ onBeforeUnmount(() => {
 }
 
 .info {
-  padding: 10px 12px;
+  padding: 12px;
   opacity: 0.7;
   cursor: default;
+}
+
+@media (max-width: 768px) {
+  .search {
+    flex-direction: column;
+  }
+
+  .search button {
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .search input,
+  .search button {
+    font-size: 16px;
+  }
 }
 </style>

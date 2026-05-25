@@ -435,4 +435,23 @@
 .favorite-btn.active {
   color: #ffd54a;
 }
+
+@media (max-width: 1200px) {
+  .card-wrapper {
+    display: flex;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 600px) {
+  .card-wrapper {
+    transform: scale(0.95);
+  }
+}
+
+@media (max-width: 420px) {
+  .card-wrapper {
+    transform: scale(0.85);
+  }
+}
 </style>

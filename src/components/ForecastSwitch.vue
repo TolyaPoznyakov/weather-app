@@ -43,6 +43,8 @@ const setMode = (mode) => {
   border-radius: 16px;
   background: rgba(0, 0, 0, 0.2);
   width: fit-content;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .mode-switch button {
@@ -61,6 +63,18 @@ const setMode = (mode) => {
 .mode-switch button.active {
   background: rgba(255, 255, 255, 0.8);
   color: #000;
+}
+
+@media (max-width: 480px) {
+  .mode-switch {
+    width: 100%;
+  }
+
+  .mode-switch button {
+    flex: 1;
+    padding: 12px;
+    font-size: 14px;
+  }
 }
 </style>
 
