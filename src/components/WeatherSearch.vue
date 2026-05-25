@@ -141,7 +141,7 @@ onBeforeUnmount(() => {
   position: absolute;
   top: 110%;
   left: 0;
-  width: 500px;
+  width: 100%;
   background: rgba(0,0,0,0.85);
   border-radius: 12px;
   overflow: hidden;

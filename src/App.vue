@@ -148,10 +148,11 @@ onMounted(async () => {
   margin: 5vh;
 }
 
-.favorite-list  {
+.favorite-list {
   display: flex;
   gap: 15px;
   flex-wrap: wrap;
+  justify-content: center;
 }
 
 .fade-enter-active,

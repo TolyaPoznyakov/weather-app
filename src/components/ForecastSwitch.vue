@@ -42,6 +42,7 @@ const setMode = (mode) => {
   padding: 8px;
   border-radius: 16px;
   background: rgba(0, 0, 0, 0.2);
+  width: fit-content;
 }
 
 .mode-switch button {
@@ -54,6 +55,7 @@ const setMode = (mode) => {
   background: rgba(255, 255, 255, 0.2);
   color: white;
   transition: 0.3s;
+  white-space: nowrap;
 }
 
 .mode-switch button.active {

@@ -1,167 +1,176 @@
 <script setup>
-import { ref, computed, onMounted, watch  } from "vue";
-import { useI18n } from "vue-i18n";
-import { useModal } from "@/composables/useModal";
+  import { ref, computed, onMounted, watch } from "vue";
+  import { useI18n } from "vue-i18n";
+  import { useModal } from "@/composables/useModal";
 
-const modal = useModal();
+  const modal = useModal();
+  const { t } = useI18n();
 
-const emit = defineEmits(["favorites-updated"]);
-const { t } = useI18n();
+  const emit = defineEmits(["favorites-updated"]);
 
-const props = defineProps({
+  const props = defineProps({
   data: Object,
   mode: {
-    type: String,
-    default: "day",
-  },
+  type: String,
+  default: "day",
+},
 });
 
-const isFlipped = ref(false);
-const isFavorite = ref(false);
+  const isFlipped = ref(false);
+  const isFavorite = ref(false);
 
-const forecast = computed(() => {
-  if (!props.data?.forecast?.forecastday) return null;
+  const isDay = computed(() => props.mode === "day");
 
-  if (props.mode === "day") {
-    return props.data.forecast.forecastday[0];
-  } else {
-    const days = props.data.forecast.forecastday;
-    const avgTemp = Math.round(days.reduce((sum, d) => sum + d.day.avgtemp_c, 0) / days.length);
-    const avgHumidity = Math.round(days.reduce((sum, d) => sum + d.day.avghumidity, 0) / days.length);
-    const avgWind = Math.round(days.reduce((sum, d) => sum + d.day.maxwind_kph, 0) / days.length);
-    const avgPressure = Math.round(days.reduce((sum, d) => sum + d.day.pressure_mb, 0) / days.length);
+  const location = computed(() => props.data?.location || {});
+  const forecastData = computed(() => props.data?.forecast?.forecastday || []);
 
-    return {
-      day: {
-        avgtemp_c: avgTemp,
-        avghumidity: avgHumidity,
-        maxwind_kph: avgWind,
-        pressure_mb: avgPressure,
-      },
-      mode: "3days",
-    };
-  }
+  const getFavorites = () =>
+  JSON.parse(localStorage.getItem("favorites")) || [];
+
+  const saveFavorites = (favorites) =>
+  localStorage.setItem("favorites", JSON.stringify(favorites));
+
+  const isSameLocation = (a, b) =>
+  a.location?.name === b.location?.name &&
+  a.location?.country === b.location?.country;
+
+  const forecast = computed(() => {
+  if (!forecastData.value.length) return null;
+
+  if (isDay.value) {
+  return forecastData.value[0];
+}
+
+  const days = forecastData.value;
+
+  return {
+  day: {
+  avgtemp_c: Math.round(days.reduce((s, d) => s + d.day.avgtemp_c, 0) / days.length),
+  avghumidity: Math.round(days.reduce((s, d) => s + d.day.avghumidity, 0) / days.length),
+  maxwind_kph: Math.round(days.reduce((s, d) => s + d.day.maxwind_kph, 0) / days.length),
+  pressure_mb: Math.round(days.reduce((s, d) => s + d.day.pressure_mb, 0) / days.length),
+},
+};
 });
 
-const addToFavorites = async () => {
-  const favorites = JSON.parse(localStorage.getItem("favorites")) || [];
+  const forecastDay = computed(() => forecast.value?.day || {});
+  const forecastHours = computed(() => forecast.value?.hour?.slice(0, 24) || []);
 
-  const exists = favorites.some(
-      (favorite) =>
-          favorite.location.name === props.data.location.name &&
-          favorite.location.country === props.data.location.country,
+  const addToFavorites = async () => {
+  if (!props.data) return;
+
+  const favorites = getFavorites();
+
+  const exists = favorites.some((f) =>
+  isSameLocation(f, props.data)
   );
 
   if (exists) {
-    const updatedFavorites = favorites.filter(
-        (favorite) =>
-            !(
-                favorite.location.name === props.data.location.name &&
-                favorite.location.country === props.data.location.country
-            ),
-    );
+  const updated = favorites.filter((f) => !isSameLocation(f, props.data));
+  saveFavorites(updated);
+  emit("favorites-updated");
+  isFavorite.value = false;
+  return;
+}
 
-    localStorage.setItem(
-        "favorites",
-        JSON.stringify(updatedFavorites),
-    );
-    emit("favorites-updated");
-    isFavorite.value = false;
-    return;
-  }
   if (favorites.length >= 5) {
-    await modal.alert(
-        t('common.modal.desc'),
-        t('common.modal.title')
-    );
-    return;
-  }
-  const updatedFavorites = [...favorites, props.data];
-  localStorage.setItem(
-      "favorites",
-      JSON.stringify(updatedFavorites),
+  await modal.alert(
+  t("common.modal.desc"),
+  t("common.modal.title")
   );
+  return;
+}
+
+  saveFavorites([...favorites, props.data]);
   emit("favorites-updated");
   isFavorite.value = true;
 };
 
-const checkIsFavorite = () => {
-  const favorites = JSON.parse(localStorage.getItem("favorites")) || [];
+  const checkIsFavorite = () => {
+  const favorites = getFavorites();
 
-  isFavorite.value = favorites.some(
-      (favorite) =>
-          favorite.location.name === props.data.location.name &&
-          favorite.location.country === props.data.location.country,
+  isFavorite.value = favorites.some((f) =>
+  isSameLocation(f, props.data)
   );
 };
 
-onMounted(() => {
-  checkIsFavorite();
-});
+  onMounted(checkIsFavorite);
 
-watch(
-    () => props.data,
-    () => {
-      checkIsFavorite();
-    },
-);
+  watch(() => props.data, checkIsFavorite);
 </script>
 
 <template>
   <div class="card-wrapper" @click="isFlipped = !isFlipped">
-    <div :class="{ flipped: isFlipped }" class="card-inner">
+    <div class="card-inner" :class="{ flipped: isFlipped }">
+
       <div class="card front">
         <div class="top">
           <div>
-            <h2 class="city">{{ data.location.name }}</h2>
+            <h2 class="city">{{ location.name }}</h2>
             <p class="desc">
-              {{ props.mode === "day" ? data.current.condition.text : t('weatherCard.forecast') }}
+              {{ isDay ? props.data.current.condition.text : t('weatherCard.forecast') }}
             </p>
           </div>
           <img
-              v-if="props.mode === 'day'"
+              v-if="isDay"
               class="icon"
-              :src="`https:${data.current.condition.icon}`"
-              alt="weather icon"
+              :src="`https:${props.data.current.condition.icon}`"
+              alt=""
           />
         </div>
 
         <div class="temp">
-          {{ props.mode === "day" ? Math.round(data.current.temp_c) : forecast.day.avgtemp_c }}°
+          {{ isDay
+            ? Math.round(props.data.current.temp_c)
+            : forecastDay.avgtemp_c
+          }}°
         </div>
-
 
         <div class="grid">
           <div class="item">
             <span>{{ t('weatherCard.feelsLike') }}</span>
-            <b>{{ props.mode === "day" ? Math.round(data.current.feelslike_c) : forecast.day.avgtemp_c }}°C</b>
+            <b>{{ isDay
+                ? Math.round(props.data.current.feelslike_c)
+                : forecastDay.avgtemp_c
+              }}°C</b>
           </div>
+
           <div class="item">
             <span>{{ t('weatherCard.humidity') }}</span>
-            <b>{{ props.mode === "day" ? data.current.humidity : forecast.day.avghumidity }}%</b>
+            <b>{{ isDay
+                ? props.data.current.humidity
+                : forecastDay.avghumidity
+              }}%</b>
           </div>
+
           <div class="item">
             <span>{{ t('weatherCard.wind') }}</span>
-            <b>{{ props.mode === "day" ? data.current.wind_kph : forecast.day.maxwind_kph }} km/h</b>
+            <b>{{ isDay
+                ? props.data.current.wind_kph
+                : forecastDay.maxwind_kph
+              }} km/h</b>
           </div>
+
           <div class="item">
             <span>{{ t('weatherCard.pressure') }}</span>
-            <b>{{ props.mode === "day" ? data.current.pressure_mb : forecast.day.pressure_mb }} hPa</b>
+            <b>{{ isDay
+                ? props.data.current.pressure_mb
+                : forecastDay.pressure_mb
+              }} hPa</b>
           </div>
         </div>
+
         <button
             class="favorite-btn"
             :class="{ active: isFavorite }"
             @click.stop="addToFavorites"
         >
-          <svg width="40" height="40" viewBox="0 0 24 24" class="star-icon">
+          <svg viewBox="0 0 24 24">
             <path
                 d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 22 12 18.56 5.82 22 7 14.14 2 9.27l6.91-1.01L12 2z"
                 fill="none"
                 stroke="currentColor"
                 stroke-width="1.5"
-                stroke-linejoin="round"
-                stroke-linecap="round"
             />
           </svg>
         </button>
@@ -169,39 +178,50 @@ watch(
 
       <div class="card back">
         <h2 class="forecast-title">
-          {{ props.mode === "day" ? t('weatherCard.hourlyForecast') : t('weatherCard.threeDayForecast') }}
+          {{ isDay ? t('weatherCard.hourlyForecast') : t('weatherCard.threeDayForecast') }}
         </h2>
 
-        <div v-if="props.mode === 'day'" class="hourly-list">
+        <div v-if="isDay" class="hourly-list">
           <div
-              v-for="hour in forecast.hour.slice(0, 24)"
+              v-for="hour in forecastHours"
               :key="hour.time_epoch"
               class="hour-item"
           >
-            <span class="hour">{{ hour.time.split(' ')[1].slice(0, 5) }}</span>
+            <span class="hour">
+              {{ hour.time.split(' ')[1].slice(0, 5) }}
+            </span>
+
             <div class="hour-center">
               <img :src="`https:${hour.condition.icon}`" class="hour-icon" alt="" />
               <span class="condition">{{ hour.condition.text }}</span>
             </div>
-            <span class="hour-temp">{{ Math.round(hour.temp_c) }}°</span>
+
+            <span class="hour-temp">
+              {{ Math.round(hour.temp_c) }}°
+            </span>
           </div>
         </div>
 
         <div v-else class="hourly-list">
           <div
-              v-for="day in props.data.forecast.forecastday"
+              v-for="day in forecastData"
               :key="day.date"
               class="hour-item"
           >
             <span class="hour">{{ day.date }}</span>
+
             <div class="hour-center">
               <img :src="`https:${day.day.condition.icon}`" class="hour-icon" alt="" />
               <span class="condition">{{ day.day.condition.text }}</span>
             </div>
-            <span class="hour-temp">{{ Math.round(day.day.avgtemp_c) }}°C</span>
+
+            <span class="hour-temp">
+              {{ Math.round(day.day.avgtemp_c) }}°C
+            </span>
           </div>
         </div>
       </div>
+
     </div>
   </div>
 </template>
