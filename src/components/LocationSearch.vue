@@ -1,0 +1,164 @@
+<script setup>
+import { ref, onMounted, onBeforeUnmount } from "vue"
+import { useWeatherApi } from "@/composables/useWeatherApi.js"
+import { useI18n } from "vue-i18n"
+
+const { t } = useI18n()
+const { loading, searchCities } = useWeatherApi()
+
+const props = defineProps({
+  searchCity: String,
+})
+
+const emit = defineEmits(["update:searchCity", "search"])
+
+const suggestions = ref([])
+const showSuggestions = ref(false)
+const wrapper = ref(null)
+
+let timeout = null
+
+const updateValue = (e) => {
+  const value = e.target.value
+  emit("update:searchCity", value)
+  clearTimeout(timeout)
+  if (!value) {
+    suggestions.value = []
+    showSuggestions.value = false
+    return
+  }
+  timeout = setTimeout(async () => {
+    const res = await searchCities(value)
+    if (res === null) return
+
+    suggestions.value = res
+    showSuggestions.value = true
+  }, 300)
+}
+
+const selectCity = (city) => {
+  emit("update:searchCity", city.name)
+  showSuggestions.value = false
+  suggestions.value = []
+  emit("search")
+}
+
+const handleClickOutside = (e) => {
+  if (wrapper.value && !wrapper.value.contains(e.target)) {
+    showSuggestions.value = false
+  }
+}
+
+onMounted(() => {
+  document.addEventListener("click", handleClickOutside)
+})
+
+onBeforeUnmount(() => {
+  document.removeEventListener("click", handleClickOutside)
+})
+</script>
+
+<template>
+  <div class="search">
+    <div ref="wrapper" class="input-wrapper">
+      <input
+          :value="searchCity"
+          type="text"
+          :placeholder="t('search.placeholder')"
+          @input="updateValue"
+          @keyup.enter="suggestions.length ? selectCity(suggestions[0]) : $emit('search')"
+          @focus="showSuggestions = true"
+      />
+      <ul v-if="showSuggestions" class="dropdown">
+        <li v-if="loading" class="info">
+          {{ t("common.loading") }}
+        </li>
+        <li v-for="city in suggestions" :key="city.id || city.name" @click="selectCity(city)">
+          {{ city.name }}, {{ city.country }}
+        </li>
+        <li v-if="!loading && !suggestions.length" class="info">
+          {{ t("search.noResults") }}
+        </li>
+      </ul>
+    </div>
+  </div>
+</template>
+
+<style scoped>
+.search {
+  display: flex;
+  gap: 14px;
+  margin-bottom: 28px;
+  width: 100%;
+}
+
+.input-wrapper {
+  position: relative;
+  flex: 1;
+}
+
+.search input {
+  width: 100%;
+  min-width: 0;
+  height: 58px;
+  padding: 14px 18px;
+  border: none;
+  border-radius: 16px;
+  outline: none;
+  background: rgba(255, 255, 255, 0.15);
+  color: white;
+  font-size: 22px;
+  font-weight: 800;
+  backdrop-filter: blur(10px);
+  box-sizing: border-box;
+}
+
+.search input::placeholder {
+  font-size: 18px;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.dropdown {
+  position: absolute;
+  top: 110%;
+  left: 0;
+  width: 100%;
+  background: rgba(0, 0, 0, 0.85);
+  border-radius: 12px;
+  overflow: hidden;
+  z-index: 1000;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  backdrop-filter: blur(12px);
+}
+
+.dropdown li {
+  padding: 12px;
+  cursor: pointer;
+  color: white;
+  word-break: break-word;
+}
+
+.dropdown li:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.info {
+  padding: 12px;
+  opacity: 0.7;
+  cursor: default;
+}
+
+@media (max-width: 768px) {
+  .search {
+    flex-direction: column;
+  }
+}
+
+@media (max-width: 480px) {
+  .search input {
+    font-size: 16px;
+  }
+}
+</style>

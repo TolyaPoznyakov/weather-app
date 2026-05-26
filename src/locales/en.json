@@ -1,0 +1,44 @@
+{
+  "weatherCard": {
+    "forecast": "Forecast",
+    "feelsLike": "Feels like",
+    "humidity": "Humidity",
+    "wind": "Wind",
+    "pressure": "Pressure",
+    "hourlyForecast": "Hourly Forecast",
+    "threeDayForecast": "3-Day Forecast",
+    "remove": "Remove city",
+    "day": "Day",
+    "night": "Night"
+  },
+  "chart": {
+    "hourlyForecast": "Hourly Forecast",
+    "threeDayAverage": "Average forecast for 3 days",
+    "temperature": "Temperature Â°C",
+    "now": "Now"
+  },
+  "forecast": {
+    "today": "Today",
+    "threeDays": "3 Days"
+  },
+  "search": {
+    "placeholder": "Enter city...",
+    "button": "Search",
+    "noResults": "No results"
+  },
+  "nav": {
+    "appName": "Weather",
+    "forecast": "Forecast",
+    "favorites": "Favorites"
+  },
+  "common": {
+    "modal": {
+      "title": "Favorites limit",
+      "desc": "You already have 5 cities. Remove one first.",
+      "cityLimitTitle": "Cities limit",
+      "cityLimitDesc": "You can show up to 5 cities. Remove one first."
+    },
+    "loading": "Loading...",
+    "cityNotFound": "City not found"
+  }
+}

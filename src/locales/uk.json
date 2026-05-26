@@ -1,0 +1,44 @@
+{
+  "weatherCard": {
+    "forecast": "Прогноз",
+    "feelsLike": "Відчувається як",
+    "humidity": "Вологість",
+    "wind": "Вітер",
+    "pressure": "Тиск",
+    "hourlyForecast": "Погодинний прогноз",
+    "threeDayForecast": "Прогноз на 3 дні",
+    "remove": "Видалити місто",
+    "day": "День",
+    "night": "Ніч"
+  },
+  "chart": {
+    "hourlyForecast": "Погодинний прогноз",
+    "threeDayAverage": "Середній прогноз за 3 дні",
+    "temperature": "Температура °C",
+    "now": "Зараз"
+  },
+  "forecast": {
+    "today": "Сьогодні",
+    "threeDays": "3 дні"
+  },
+  "search": {
+    "placeholder": "Введіть місто...",
+    "button": "Пошук",
+    "noResults": "Нічого не знайдено"
+  },
+  "nav": {
+    "appName": "Погода",
+    "forecast": "Прогноз",
+    "favorites": "Обрані"
+  },
+  "common": {
+    "modal": {
+      "title": "Ліміт обраного",
+      "desc": "У вас вже є 5 міст. Спочатку видаліть одне.",
+      "cityLimitTitle": "Ліміт міст",
+      "cityLimitDesc": "Можна показати до 5 міст. Спочатку видаліть одне."
+    },
+    "loading": "Завантаження...",
+    "cityNotFound": "Місто не знайдено"
+  }
+}
