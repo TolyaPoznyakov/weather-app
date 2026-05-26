@@ -1,7 +1,7 @@
 <script setup>
-import { useModal } from "@/composables/useModal";
+import { useModal } from "@/composables/useModal"
 
-const modal = useModal();
+const modal = useModal()
 </script>
 
 <template>
@@ -10,14 +10,11 @@ const modal = useModal();
       <div class="modal">
         <h2>{{ modal.state.title }}</h2>
         <p>{{ modal.state.message }}</p>
-        <button @click="modal.close(true)">
-          OK
-        </button>
+        <button @click="modal.close(true)">OK</button>
       </div>
     </div>
   </Teleport>
 </template>
-
 
 <style scoped>
 .overlay {

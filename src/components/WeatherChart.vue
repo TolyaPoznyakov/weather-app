@@ -1,6 +1,6 @@
 <script setup>
-import { ref, onMounted, watch } from "vue";
-import { useI18n } from "vue-i18n";
+import { ref, onMounted, watch } from "vue"
+import { useI18n } from "vue-i18n"
 import {
   Chart,
   LineController,
@@ -11,21 +11,21 @@ import {
   Filler,
   Tooltip,
   Legend,
-} from "chart.js";
-import { getDayChartData, get3DayChartData } from "@/utils/chartData";
+} from "chart.js"
+import { getDayChartData, get3DayChartData } from "@/utils/chartData"
 
 Chart.register(
-    LineController,
-    LineElement,
-    PointElement,
-    LinearScale,
-    CategoryScale,
-    Filler,
-    Tooltip,
-    Legend,
-);
+  LineController,
+  LineElement,
+  PointElement,
+  LinearScale,
+  CategoryScale,
+  Filler,
+  Tooltip,
+  Legend
+)
 
-const { t } = useI18n();
+const { t } = useI18n()
 const props = defineProps({
   forecast: {
     type: Object,
@@ -35,26 +35,24 @@ const props = defineProps({
     type: String,
     default: "day",
   },
-});
+})
 
-const chartRef = ref(null);
-let chartInstance = null;
+const chartRef = ref(null)
+let chartInstance = null
 
 function renderChart() {
-  if (!props.forecast) return;
+  if (!props.forecast) return
   const chartData =
-      props.mode === "day"
-          ? getDayChartData(props.forecast)
-          : get3DayChartData(props.forecast);
-  const ctx = chartRef.value.getContext("2d");
+    props.mode === "day" ? getDayChartData(props.forecast) : get3DayChartData(props.forecast)
+  const ctx = chartRef.value.getContext("2d")
 
   if (chartInstance) {
-    chartInstance.destroy();
+    chartInstance.destroy()
   }
 
-  const gradient = ctx.createLinearGradient(0, 0, 0, 300);
-  gradient.addColorStop(0, "rgba(255,255,255,0.5)");
-  gradient.addColorStop(1, "rgba(255,255,255,0.05)");
+  const gradient = ctx.createLinearGradient(0, 0, 0, 300)
+  gradient.addColorStop(0, "rgba(255,255,255,0.5)")
+  gradient.addColorStop(1, "rgba(255,255,255,0.05)")
 
   const datasets = [
     {
@@ -68,21 +66,19 @@ function renderChart() {
       pointBorderColor: "transparent",
       pointRadius: 4,
     },
-  ];
+  ]
 
   if (props.mode === "day") {
     datasets.push({
       label: t("chart.now"),
-      data: chartData.temps.map((t, i) =>
-          i === chartData.currentIndex ? t : null,
-      ),
+      data: chartData.temps.map((t, i) => (i === chartData.currentIndex ? t : null)),
       showLine: false,
       pointRadius: 8,
       pointHoverRadius: 10,
       pointBackgroundColor: "#000000",
       pointBorderColor: "rgba(255,255,255,0.9)",
       pointBorderWidth: 2,
-    });
+    })
   }
 
   chartInstance = new Chart(ctx, {
@@ -120,31 +116,27 @@ function renderChart() {
         },
       },
     },
-  });
+  })
 }
 
 onMounted(() => {
-  renderChart();
-});
+  renderChart()
+})
 
 watch(
-    () => props.mode,
-    () => renderChart(),
-);
+  () => props.mode,
+  () => renderChart()
+)
 watch(
-    () => props.forecast,
-    () => renderChart(),
-);
+  () => props.forecast,
+  () => renderChart()
+)
 </script>
 
 <template>
   <div class="chart-container">
     <h2 class="chart-title">
-      {{
-        props.mode === "day"
-            ? t("chart.hourlyForecast")
-            : t("chart.threeDayAverage")
-      }}
+      {{ props.mode === "day" ? t("chart.hourlyForecast") : t("chart.threeDayAverage") }}
     </h2>
     <canvas ref="chartRef"></canvas>
   </div>
@@ -161,8 +153,8 @@ watch(
   backdrop-filter: blur(18px);
   border: 1px solid rgba(255, 255, 255, 0.2);
   box-shadow:
-      0 10px 40px rgba(0, 0, 0, 0.25),
-      inset 0 1px 1px rgba(255, 255, 255, 0.15);
+    0 10px 40px rgba(0, 0, 0, 0.25),
+    inset 0 1px 1px rgba(255, 255, 255, 0.15);
   box-sizing: border-box;
   overflow: hidden;
 }

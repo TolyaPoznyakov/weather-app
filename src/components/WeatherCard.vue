@@ -1,16 +1,19 @@
 <script setup>
-import { ref, computed, onMounted, watch } from "vue";
-import { useI18n } from "vue-i18n";
-import { useModal } from "@/composables/useModal";
+import { ref, computed, onMounted, watch } from "vue"
+import { useI18n } from "vue-i18n"
+import { useModal } from "@/composables/useModal"
+import { X, Star } from "@lucide/vue"
 
-const modal = useModal();
-const { t } = useI18n();
+const modal = useModal()
+const { t } = useI18n()
 
-const emit = defineEmits(["favorites-updated", "select", "remove"]);
+const emit = defineEmits(["favorites-updated", "select", "remove"])
 
-// TODO: додати formatter (Prettier)
 const props = defineProps({
-  data: Object,
+  weather: {
+    type: Object,
+    required: true,
+  },
   mode: {
     type: String,
     default: "day",
@@ -23,113 +26,95 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
-});
+})
 
-const isFlipped = ref(false);
-const isFavorite = ref(false);
+const isFlipped = ref(false)
+const isFavorite = ref(false)
 
-const isDay = computed(() => props.mode === "day");
+const isDay = computed(() => props.mode === "day")
 
-const location = computed(() => props.data?.location || {});
-const forecastData = computed(() => props.data?.forecast?.forecastday || []);
+const location = computed(() => props.weather?.location || {})
+const forecastData = computed(() => props.weather?.forecast?.forecastday || [])
 
-const getFavorites = () => JSON.parse(localStorage.getItem("favorites")) || [];
+const getFavorites = () => JSON.parse(localStorage.getItem("favorites")) || []
 
-const saveFavorites = (favorites) =>
-    localStorage.setItem("favorites", JSON.stringify(favorites));
+const saveFavorites = (favorites) => localStorage.setItem("favorites", JSON.stringify(favorites))
 
 const isSameLocation = (a, b) =>
-    a.location?.name === b.location?.name &&
-    a.location?.country === b.location?.country;
+  a.location?.name === b.location?.name && a.location?.country === b.location?.country
 
 const forecast = computed(() => {
-  if (!forecastData.value.length) return null;
+  if (!forecastData.value.length) return null
 
   if (isDay.value) {
-    return forecastData.value[0];
+    return forecastData.value[0]
   }
 
-  const days = forecastData.value;
+  const days = forecastData.value
 
   return {
     day: {
-      avgtemp_c: Math.round(
-          days.reduce((s, d) => s + d.day.avgtemp_c, 0) / days.length,
-      ),
-      avghumidity: Math.round(
-          days.reduce((s, d) => s + d.day.avghumidity, 0) / days.length,
-      ),
-      maxwind_kph: Math.round(
-          days.reduce((s, d) => s + d.day.maxwind_kph, 0) / days.length,
-      ),
-      pressure_mb: Math.round(
-          days.reduce((s, d) => s + d.day.pressure_mb, 0) / days.length,
-      ),
+      avgtemp_c: Math.round(days.reduce((s, d) => s + d.day.avgtemp_c, 0) / days.length),
+      avghumidity: Math.round(days.reduce((s, d) => s + d.day.avghumidity, 0) / days.length),
+      maxwind_kph: Math.round(days.reduce((s, d) => s + d.day.maxwind_kph, 0) / days.length),
+      pressure_mb: Math.round(days.reduce((s, d) => s + d.day.pressure_mb, 0) / days.length),
     },
-  };
-});
+  }
+})
 
-const forecastDay = computed(() => forecast.value?.day || {});
-const forecastHours = computed(() => forecast.value?.hour?.slice(0, 24) || []);
+const forecastDay = computed(() => forecast.value?.day || {})
+const forecastHours = computed(() => forecast.value?.hour?.slice(0, 24) || [])
 
 const addToFavorites = async () => {
-  if (!props.data) return;
+  if (!props.weather) return
 
-  const favorites = getFavorites();
+  const favorites = getFavorites()
 
-  const exists = favorites.some((f) => isSameLocation(f, props.data));
+  const exists = favorites.some((f) => isSameLocation(f, props.weather))
 
   if (exists) {
-    const updated = favorites.filter((f) => !isSameLocation(f, props.data));
-    saveFavorites(updated);
-    emit("favorites-updated");
-    isFavorite.value = false;
-    return;
+    const updated = favorites.filter((f) => !isSameLocation(f, props.weather))
+    saveFavorites(updated)
+    emit("favorites-updated")
+    isFavorite.value = false
+    return
   }
 
   if (favorites.length >= 5) {
-    await modal.alert(t("common.modal.desc"), t("common.modal.title"));
-    return;
+    await modal.alert(t("common.modal.desc"), t("common.modal.title"))
+    return
   }
 
-  saveFavorites([...favorites, props.data]);
-  emit("favorites-updated");
-  isFavorite.value = true;
-};
+  saveFavorites([...favorites, props.weather])
+  emit("favorites-updated")
+  isFavorite.value = true
+}
 
 const checkIsFavorite = () => {
-  const favorites = getFavorites();
+  const favorites = getFavorites()
 
-  isFavorite.value = favorites.some((f) => isSameLocation(f, props.data));
-};
+  isFavorite.value = favorites.some((f) => isSameLocation(f, props.weather))
+}
 
-onMounted(checkIsFavorite);
+onMounted(checkIsFavorite)
 
-watch(() => props.data, checkIsFavorite);
+watch(() => props.weather, checkIsFavorite)
 
 const onCardClick = () => {
-  emit("select");
-  isFlipped.value = !isFlipped.value;
-};
+  emit("select")
+  isFlipped.value = !isFlipped.value
+}
 </script>
 
 <template>
   <div class="card-wrapper" :class="{ selected }" @click="onCardClick">
     <button
-        v-if="removable"
-        class="remove-btn"
-        :aria-label="t('weatherCard.remove')"
-        @click.stop="$emit('remove')"
+      v-if="removable"
+      class="remove-btn"
+      :aria-label="t('weatherCard.remove')"
+      @click.stop="$emit('remove')"
     >
-      <svg viewBox="0 0 24 24">
-        <path
-            d="M6 6L18 18M18 6L6 18"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            fill="none"
-        />
-      </svg>
+      <X />
     </button>
     <div class="card-inner" :class="{ flipped: isFlipped }">
       <div class="card front">
@@ -137,113 +122,65 @@ const onCardClick = () => {
           <div>
             <h2 class="city">{{ location.name }}</h2>
             <p class="desc">
-              {{
-                isDay
-                    ? props.data.current.condition.text
-                    : t("weatherCard.forecast")
-              }}
+              {{ isDay ? props.weather.current.condition.text : t("weatherCard.forecast") }}
             </p>
           </div>
           <img
-              v-if="isDay"
-              class="icon"
-              :src="`https:${props.data.current.condition.icon}`"
-              alt=""
+            v-if="isDay"
+            class="icon"
+            :src="`https:${props.weather.current.condition.icon}`"
+            alt=""
           />
         </div>
 
         <div class="temp">
-          {{
-            isDay
-                ? Math.round(props.data.current.temp_c)
-                : forecastDay.avgtemp_c
-          }}°
+          {{ isDay ? Math.round(props.weather.current.temp_c) : forecastDay.avgtemp_c }}°
         </div>
 
         <div class="grid">
           <div class="item">
             <span>{{ t("weatherCard.feelsLike") }}</span>
             <b
-            >{{
-                isDay
-                    ? Math.round(props.data.current.feelslike_c)
-                    : forecastDay.avgtemp_c
+              >{{
+                isDay ? Math.round(props.weather.current.feelslike_c) : forecastDay.avgtemp_c
               }}°C</b
             >
           </div>
 
           <div class="item">
             <span>{{ t("weatherCard.humidity") }}</span>
-            <b
-            >{{
-                isDay ? props.data.current.humidity : forecastDay.avghumidity
-              }}%</b
-            >
+            <b>{{ isDay ? props.weather.current.humidity : forecastDay.avghumidity }}%</b>
           </div>
 
           <div class="item">
             <span>{{ t("weatherCard.wind") }}</span>
-            <b
-            >{{
-                isDay ? props.data.current.wind_kph : forecastDay.maxwind_kph
-              }}
-              km/h</b
-            >
+            <b>{{ isDay ? props.weather.current.wind_kph : forecastDay.maxwind_kph }} km/h</b>
           </div>
 
           <div class="item">
             <span>{{ t("weatherCard.pressure") }}</span>
-            <b
-            >{{
-                isDay ? props.data.current.pressure_mb : forecastDay.pressure_mb
-              }}
-              hPa</b
-            >
+            <b>{{ isDay ? props.weather.current.pressure_mb : forecastDay.pressure_mb }} hPa</b>
           </div>
         </div>
 
-        <button
-            class="favorite-btn"
-            :class="{ active: isFavorite }"
-            @click.stop="addToFavorites"
-        >
-          <!-- TODO: переробити на SVG inline -->
-          <svg viewBox="0 0 24 24">
-            <path
-                d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 22 12 18.56 5.82 22 7 14.14 2 9.27l6.91-1.01L12 2z"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="1.5"
-            />
-          </svg>
+        <button class="favorite-btn" :class="{ active: isFavorite }" @click.stop="addToFavorites">
+          <Star />
         </button>
       </div>
 
       <div class="card back">
         <h2 class="forecast-title">
-          {{
-            isDay
-                ? t("weatherCard.hourlyForecast")
-                : t("weatherCard.threeDayForecast")
-          }}
+          {{ isDay ? t("weatherCard.hourlyForecast") : t("weatherCard.threeDayForecast") }}
         </h2>
 
         <div v-if="isDay" class="hourly-list">
-          <div
-              v-for="hour in forecastHours"
-              :key="hour.time_epoch"
-              class="hour-item"
-          >
+          <div v-for="hour in forecastHours" :key="hour.time_epoch" class="hour-item">
             <span class="hour">
               {{ hour.time.split(" ")[1].slice(0, 5) }}
             </span>
 
             <div class="hour-center">
-              <img
-                  :src="`https:${hour.condition.icon}`"
-                  class="hour-icon"
-                  alt=""
-              />
+              <img :src="`https:${hour.condition.icon}`" class="hour-icon" alt="" />
               <span class="condition">{{ hour.condition.text }}</span>
             </div>
 
@@ -256,17 +193,11 @@ const onCardClick = () => {
             <span class="hour">{{ day.date }}</span>
 
             <div class="hour-center">
-              <img
-                  :src="`https:${day.day.condition.icon}`"
-                  class="hour-icon"
-                  alt=""
-              />
+              <img :src="`https:${day.day.condition.icon}`" class="hour-icon" alt="" />
               <span class="condition">{{ day.day.condition.text }}</span>
             </div>
 
-            <span class="hour-temp">
-              {{ Math.round(day.day.avgtemp_c) }}°C
-            </span>
+            <span class="hour-temp"> {{ Math.round(day.day.avgtemp_c) }}°C </span>
           </div>
         </div>
       </div>
@@ -288,10 +219,10 @@ const onCardClick = () => {
 
 .card-wrapper.selected .card {
   box-shadow:
-      0 0 0 2px rgba(255, 255, 255, 0.85),
-      0 0 32px rgba(255, 255, 255, 0.25),
-      0 10px 40px rgba(0, 0, 0, 0.25),
-      inset 0 1px 1px rgba(255, 255, 255, 0.15);
+    0 0 0 2px rgba(255, 255, 255, 0.85),
+    0 0 32px rgba(255, 255, 255, 0.25),
+    0 10px 40px rgba(0, 0, 0, 0.25),
+    inset 0 1px 1px rgba(255, 255, 255, 0.15);
 }
 
 .remove-btn {
@@ -345,8 +276,8 @@ const onCardClick = () => {
   background: rgba(255, 255, 255, 0.15);
   border: 1px solid rgba(255, 255, 255, 0.2);
   box-shadow:
-      0 10px 40px rgba(0, 0, 0, 0.25),
-      inset 0 1px 1px rgba(255, 255, 255, 0.15);
+    0 10px 40px rgba(0, 0, 0, 0.25),
+    inset 0 1px 1px rgba(255, 255, 255, 0.15);
   color: white;
   backface-visibility: hidden;
   box-sizing: border-box;

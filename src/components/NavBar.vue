@@ -1,32 +1,33 @@
 <script setup>
-import { useI18n } from "vue-i18n";
+import { useI18n } from "vue-i18n"
 
-const { t } = useI18n();
+const { t } = useI18n()
 
 const props = defineProps({
   currentPage: String,
-});
+})
 
-const emit = defineEmits(["update:currentPage"]);
+const emit = defineEmits(["update:currentPage"])
 
 const setPage = (page) => {
-  emit("update:currentPage", page);
-};
+  emit("update:currentPage", page)
+}
 </script>
 
 <template>
   <div class="weather-title-lang">
     <div class="nav">
       <h1 class="title" @click="setPage('weather')">
-        <span class="big-w">{{ t('common.w') }}</span>{{ t('common.eatherForecast') }}
+        <span class="big-w">{{ t("common.w") }}</span
+        >{{ t("common.eatherForecast") }}
       </h1>
       <span class="title divider">|</span>
       <span
-          class="title title-fav"
-          :class="{ active: currentPage === 'favorite' }"
-          @click="setPage('favorite')"
+        class="title title-fav"
+        :class="{ active: currentPage === 'favorite' }"
+        @click="setPage('favorite')"
       >
-        {{ t('common.favorites') }}
+        {{ t("common.favorites") }}
       </span>
     </div>
   </div>
@@ -84,14 +85,13 @@ const setPage = (page) => {
     gap: 8px;
   }
 
-  .title-fav  {
+  .title-fav {
     padding-top: 6px;
   }
 
   .divider {
     display: none;
   }
-
 }
 
 @media (max-width: 480px) {
@@ -100,7 +100,7 @@ const setPage = (page) => {
     align-items: center;
   }
 
-  .title-fav  {
+  .title-fav {
     padding: 0;
   }
 

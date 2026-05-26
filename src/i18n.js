@@ -7,20 +7,20 @@ import en from "./locales/en.json"
 const savedLocale = localStorage.getItem("locale")
 
 const i18n = createI18n({
-    legacy: false,
-    locale: savedLocale || "en",
-    fallbackLocale: "en",
-    messages: {
-        uk,
-        en
-    }
+  legacy: false,
+  locale: savedLocale || "en",
+  fallbackLocale: "en",
+  messages: {
+    uk,
+    en,
+  },
 })
 
 watch(
-    () => i18n.global.locale.value,
-    (newLocale) => {
-        localStorage.setItem("locale", newLocale)
-    }
+  () => i18n.global.locale.value,
+  (newLocale) => {
+    localStorage.setItem("locale", newLocale)
+  }
 )
 
 export default i18n

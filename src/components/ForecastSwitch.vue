@@ -1,5 +1,5 @@
 <script setup>
-import { defineEmits, defineProps } from "vue";
+import { defineEmits, defineProps } from "vue"
 import { useI18n } from "vue-i18n"
 
 const { t } = useI18n()
@@ -7,30 +7,24 @@ const { t } = useI18n()
 const props = defineProps({
   modelValue: {
     type: String,
-    default: "day"
-  }
-});
+    default: "day",
+  },
+})
 
-const emit = defineEmits(["update:modelValue"]);
+const emit = defineEmits(["update:modelValue"])
 
 const setMode = (mode) => {
-  emit("update:modelValue", mode);
-};
+  emit("update:modelValue", mode)
+}
 </script>
 
 <template>
   <div class="mode-switch">
-    <button
-        :class="{ active: modelValue === 'day' }"
-        @click="setMode('day')"
-    >
-      {{ t('forecast.today') }}
+    <button :class="{ active: modelValue === 'day' }" @click="setMode('day')">
+      {{ t("forecast.today") }}
     </button>
-    <button
-        :class="{ active: modelValue === '3days' }"
-        @click="setMode('3days')"
-    >
-      {{ t('forecast.threeDays') }}
+    <button :class="{ active: modelValue === '3days' }" @click="setMode('3days')">
+      {{ t("forecast.threeDays") }}
     </button>
   </div>
 </template>
@@ -77,4 +71,3 @@ const setMode = (mode) => {
   }
 }
 </style>
-

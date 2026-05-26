@@ -7,12 +7,10 @@ const { locale } = useI18n()
 const isOpen = ref(false)
 const languages = [
   { code: "en", label: "English" },
-  { code: "uk", label: "Українська" }
+  { code: "uk", label: "Українська" },
 ]
 
-const currentLang = computed(() =>
-    languages.find(l => l.code === locale.value)
-)
+const currentLang = computed(() => languages.find((l) => l.code === locale.value))
 
 const selectLanguage = (code) => {
   locale.value = code
@@ -32,11 +30,11 @@ const toggle = () => {
     </button>
     <div v-if="isOpen" class="dropdown">
       <div
-          v-for="lang in languages"
-          :key="lang.code"
-          class="item"
-          :class="{ active: locale === lang.code }"
-          @click="selectLanguage(lang.code)"
+        v-for="lang in languages"
+        :key="lang.code"
+        class="item"
+        :class="{ active: locale === lang.code }"
+        @click="selectLanguage(lang.code)"
       >
         {{ lang.label }}
       </div>
