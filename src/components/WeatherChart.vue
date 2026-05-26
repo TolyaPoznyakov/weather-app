@@ -1,6 +1,6 @@
 <script setup>
-import { ref, onMounted, watch  } from "vue";
-import { useI18n } from "vue-i18n"
+import { ref, onMounted, watch } from "vue";
+import { useI18n } from "vue-i18n";
 import {
   Chart,
   LineController,
@@ -10,9 +10,9 @@ import {
   CategoryScale,
   Filler,
   Tooltip,
-  Legend
+  Legend,
 } from "chart.js";
-import { getDayChartData, get3DayChartData  } from "@/utils/chartData";
+import { getDayChartData, get3DayChartData } from "@/utils/chartData";
 
 Chart.register(
     LineController,
@@ -22,19 +22,19 @@ Chart.register(
     CategoryScale,
     Filler,
     Tooltip,
-    Legend
+    Legend,
 );
 
-const { t } = useI18n()
+const { t } = useI18n();
 const props = defineProps({
   forecast: {
     type: Object,
-    required: true
+    required: true,
   },
   mode: {
     type: String,
-    default: "day"
-  }
+    default: "day",
+  },
 });
 
 const chartRef = ref(null);
@@ -42,9 +42,10 @@ let chartInstance = null;
 
 function renderChart() {
   if (!props.forecast) return;
-  const chartData = props.mode === 'day'
-      ? getDayChartData(props.forecast)
-      : get3DayChartData(props.forecast);
+  const chartData =
+      props.mode === "day"
+          ? getDayChartData(props.forecast)
+          : get3DayChartData(props.forecast);
   const ctx = chartRef.value.getContext("2d");
 
   if (chartInstance) {
@@ -65,22 +66,22 @@ function renderChart() {
       borderColor: "rgba(255,255,255,0.9)",
       pointBackgroundColor: "#fff",
       pointBorderColor: "transparent",
-      pointRadius: 4
-    }
+      pointRadius: 4,
+    },
   ];
 
-  if (props.mode === 'day') {
+  if (props.mode === "day") {
     datasets.push({
       label: t("chart.now"),
       data: chartData.temps.map((t, i) =>
-          i === chartData.currentIndex ? t : null
+          i === chartData.currentIndex ? t : null,
       ),
       showLine: false,
       pointRadius: 8,
       pointHoverRadius: 10,
       pointBackgroundColor: "#000000",
       pointBorderColor: "rgba(255,255,255,0.9)",
-      pointBorderWidth: 2
+      pointBorderWidth: 2,
     });
   }
 
@@ -88,7 +89,7 @@ function renderChart() {
     type: "line",
     data: {
       labels: chartData.labels,
-      datasets
+      datasets,
     },
     options: {
       responsive: true,
@@ -97,28 +98,28 @@ function renderChart() {
       plugins: {
         legend: {
           labels: {
-            color: "white"
-          }
+            color: "white",
+          },
         },
         tooltip: {
           backgroundColor: "rgba(0,0,0,0.6)",
           titleColor: "#fff",
           bodyColor: "#fff",
           borderColor: "rgba(255,255,255,0.2)",
-          borderWidth: 1
-        }
+          borderWidth: 1,
+        },
       },
       scales: {
         x: {
           ticks: { color: "white" },
-          grid: { color: "rgba(255,255,255,0.1)" }
+          grid: { color: "rgba(255,255,255,0.1)" },
         },
         y: {
           ticks: { color: "white" },
-          grid: { color: "rgba(255,255,255,0.1)" }
-        }
-      }
-    }
+          grid: { color: "rgba(255,255,255,0.1)" },
+        },
+      },
+    },
   });
 }
 
@@ -126,18 +127,28 @@ onMounted(() => {
   renderChart();
 });
 
-watch(() => props.mode, () => renderChart());
-watch(() => props.forecast, () => renderChart());
+watch(
+    () => props.mode,
+    () => renderChart(),
+);
+watch(
+    () => props.forecast,
+    () => renderChart(),
+);
 </script>
 
-  <template>
-    <div class="chart-container">
-      <h2 class="chart-title">
-        {{ props.mode === 'day' ? t("chart.hourlyForecast") : t("chart.threeDayAverage") }}
-      </h2>
-      <canvas ref="chartRef"></canvas>
-    </div>
-  </template>
+<template>
+  <div class="chart-container">
+    <h2 class="chart-title">
+      {{
+        props.mode === "day"
+            ? t("chart.hourlyForecast")
+            : t("chart.threeDayAverage")
+      }}
+    </h2>
+    <canvas ref="chartRef"></canvas>
+  </div>
+</template>
 
 <style scoped>
 .chart-container {
@@ -191,8 +202,6 @@ canvas {
   }
 }
 
-
-
 @media (max-width: 600px) {
   .chart-container {
     transform: scale(0.95);
@@ -201,7 +210,7 @@ canvas {
 
 @media (max-width: 420px) {
   .chart-container {
-    transform: scale(0.90);
+    transform: scale(0.9);
   }
 }
 </style>

@@ -1,9 +1,10 @@
 <script setup>
 import { ref, onMounted, onBeforeUnmount } from "vue";
-import { searchCities } from "@/composables/apiRequest.js";
+import { useWeatherApi } from "@/composables/useWeatherApi.js";
 import { useI18n } from "vue-i18n"
 
 const { t } = useI18n()
+const { loading, searchCities } = useWeatherApi();
 
 const props = defineProps({
   searchCity: String
@@ -13,7 +14,6 @@ const emit = defineEmits(["update:searchCity", "search"]);
 
 const suggestions = ref([]);
 const showSuggestions = ref(false);
-const loading = ref(false);
 const wrapper = ref(null);
 
 let timeout = null;
@@ -29,9 +29,8 @@ const updateValue = (e) => {
   }
   timeout = setTimeout(async () => {
     const res = await searchCities(value);
-    suggestions.value = Array.isArray(res) ? res : [];
+    suggestions.value = res;
     showSuggestions.value = true;
-    loading.value = false;
   }, 300);
 };
 
@@ -84,6 +83,7 @@ onBeforeUnmount(() => {
         </li>
       </ul>
     </div>
+    <!-- TODO: autocomplete не потребує кнопки пошуку -->
     <button @click="$emit('search')">
       {{ t('search.button') }}
     </button>
@@ -91,12 +91,12 @@ onBeforeUnmount(() => {
 </template>
 
 <style scoped>
- .search {
-   display: flex;
-   gap: 14px;
-   margin-bottom: 28px;
-   width: 100%;
- }
+.search {
+  display: flex;
+  gap: 14px;
+  margin-bottom: 28px;
+  width: 100%;
+}
 
 .input-wrapper {
   position: relative;

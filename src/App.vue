@@ -1,5 +1,5 @@
 <script setup>
-import { apiRequest } from "@/composables/apiRequest.js";
+import { useWeatherApi } from "@/composables/useWeatherApi.js";
 import { ref, onMounted, computed } from "vue";
 import WeatherSearch from "@/components/WeatherSearch.vue";
 import WeatherCard from "@/components/WeatherCard.vue";
@@ -10,48 +10,90 @@ import NavBar from "@/components/NavBar.vue";
 import { getWeatherBackground } from "@/composables/useWeatherBackground.js";
 import { useI18n } from "vue-i18n";
 import BaseModal from "@/components/BaseModal.vue";
+import { useModal } from "@/composables/useModal";
 
 const { t } = useI18n();
+const modal = useModal();
+const { fetchForecast } = useWeatherApi();
 
-const data = ref(null);
+const MAX_CITIES = 5;
+
+const cities = ref([]);
+const selectedIndex = ref(0);
 const searchCity = ref("");
 const forecastMode = ref("day");
 const currentPage = ref("weather");
 const favorites = ref([]);
 const errorMessage = ref("");
 
+const selectedCity = computed(() => cities.value[selectedIndex.value] || null);
+
+const isSameLocation = (a, b) =>
+    a?.location?.name === b?.location?.name &&
+    a?.location?.country === b?.location?.country &&
+    a?.location?.region === b?.location?.region;
 
 const fetchWeather = async (city) => {
   try {
     errorMessage.value = "";
-    const response = await apiRequest(city, 3);
+    const response = await fetchForecast(city, 3);
     if (!response || response.error) {
-      data.value = null;
-      errorMessage.value = t('common.cityNotFound');
+      errorMessage.value = t("common.cityNotFound");
       return;
     }
-    data.value = response;
+
+    const existingIndex = cities.value.findIndex((c) =>
+        isSameLocation(c, response),
+    );
+    if (existingIndex !== -1) {
+      cities.value.splice(existingIndex, 1, response);
+      selectedIndex.value = existingIndex;
+      return;
+    }
+
+    if (cities.value.length >= MAX_CITIES) {
+      await modal.alert(
+          t("common.modal.cityLimitDesc"),
+          t("common.modal.cityLimitTitle"),
+      );
+      return;
+    }
+
+    cities.value.unshift(response);
+    selectedIndex.value = 0;
   } catch (error) {
-    data.value = null;
-    errorMessage.value = t('common.cityNotFound');
+    errorMessage.value = t("common.cityNotFound");
+  }
+};
+
+const removeCity = (index) => {
+  if (cities.value.length <= 1) return;
+
+  cities.value.splice(index, 1);
+  if (selectedIndex.value >= cities.value.length) {
+    selectedIndex.value = Math.max(0, cities.value.length - 1);
+  } else if (index < selectedIndex.value) {
+    selectedIndex.value -= 1;
   }
 };
 
 const backgroundStyle = computed(() => ({
   background: getWeatherBackground(
-      data.value?.current?.condition?.code,
-      data.value?.current?.is_day,
+      selectedCity.value?.current?.condition?.code,
+      selectedCity.value?.current?.is_day,
   ),
 }));
 
 const loadFavorites = () => {
-  favorites.value =
-      JSON.parse(localStorage.getItem("favorites")) || [];
+  favorites.value = JSON.parse(localStorage.getItem("favorites")) || [];
 };
 
 onMounted(async () => {
-  data.value = await apiRequest("auto:ip", 3);
-  searchCity.value = data.value.location.name;
+  const initial = await fetchForecast("auto:ip", 3);
+  if (initial && !initial.error) {
+    cities.value.push(initial);
+    selectedIndex.value = 0;
+  }
 
   loadFavorites();
 });
@@ -90,22 +132,35 @@ onMounted(async () => {
             @search="fetchWeather(searchCity)"
         />
       </div>
-      <div>
-        <div v-if="data" class="weather-block">
-          <WeatherCard  :data="data"
-                        :mode="forecastMode"
-                        @favorites-updated="loadFavorites" />
-          <WeatherChart :forecast="data.forecast" :mode="forecastMode" />
-        </div>
-        <div v-else-if="errorMessage" class="loading">
-          {{ errorMessage }}
-        </div>
-        <div v-else class="loading">
-          {{ t("common.loading") }}
+      <div v-if="cities.length" class="weather-block">
+        <TransitionGroup name="fade" tag="div" class="cities-grid">
+          <WeatherCard
+              v-for="(city, index) in cities"
+              :key="`${city.location.name}-${city.location.country}`"
+              :data="city"
+              :mode="forecastMode"
+              :selected="index === selectedIndex"
+              :removable="cities.length > 1"
+              @select="selectedIndex = index"
+              @remove="removeCity(index)"
+              @favorites-updated="loadFavorites"
+          />
+        </TransitionGroup>
+        <div v-if="selectedCity" class="chart-wrapper">
+          <WeatherChart
+              :forecast="selectedCity.forecast"
+              :mode="forecastMode"
+          />
         </div>
       </div>
+      <div v-else-if="errorMessage" class="loading">
+        {{ errorMessage }}
+      </div>
+      <div v-else class="loading">
+        {{ t("common.loading") }}
+      </div>
     </div>
-    <BaseModal/>
+    <BaseModal />
   </div>
 </template>
 <style scoped>
@@ -140,8 +195,19 @@ onMounted(async () => {
 
 .weather-block {
   display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+.cities-grid {
+  display: flex;
   gap: 20px;
-  align-items: stretch;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.chart-wrapper {
+  width: 100%;
 }
 
 .favorite-list {
@@ -149,12 +215,6 @@ onMounted(async () => {
   gap: 15px;
   flex-wrap: wrap;
   justify-content: center;
-}
-
-@media (max-width: 1200px) {
-  .weather-block {
-    flex-direction: column;
-  }
 }
 
 @media (max-width: 768px) {
@@ -174,7 +234,6 @@ onMounted(async () => {
   }
 
   .weather-block {
-    flex-direction: column;
     gap: 18px;
   }
 }
@@ -184,17 +243,14 @@ onMounted(async () => {
     padding: 14px;
   }
 
-  .weather-block {
-    gap: 0;
-  }
-
   .weather-toolbar {
     flex-direction: column;
     align-items: stretch;
     gap: 12px;
   }
 
-  .favorite-list {
+  .favorite-list,
+  .cities-grid {
     gap: 12px;
   }
 }

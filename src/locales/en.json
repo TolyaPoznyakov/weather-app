@@ -6,7 +6,8 @@
     "wind": "Wind",
     "pressure": "Pressure",
     "hourlyForecast": "Hourly Forecast",
-    "threeDayForecast": "3-Day Forecast"
+    "threeDayForecast": "3-Day Forecast",
+    "remove": "Remove city"
   },
   "chart": {
     "hourlyForecast": "Hourly Forecast",
@@ -26,7 +27,9 @@
   "common": {
     "modal": {
       "title": "Favorites limit",
-      "desc": "You already have 5 cities. Remove one first."
+      "desc": "You already have 5 cities. Remove one first.",
+      "cityLimitTitle": "Cities limit",
+      "cityLimitDesc": "You can show up to 5 cities. Remove one first."
     },
     "loading": "Loading...",
     "favorites": "Favorites",
