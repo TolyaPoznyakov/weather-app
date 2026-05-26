@@ -1,13 +1,15 @@
 <script setup>
-import { ref, computed, onMounted, watch } from "vue"
+import { ref, computed } from "vue"
 import { useI18n } from "vue-i18n"
 import { useModal } from "@/composables/useModal"
+import { useFavorites } from "@/composables/useFavorites"
 import { X, Star } from "@lucide/vue"
 
 const modal = useModal()
 const { t } = useI18n()
+const { isFavorite: isFav, toggle: toggleFavorite } = useFavorites()
 
-const emit = defineEmits(["favorites-updated", "select", "remove"])
+const emit = defineEmits(["select", "remove"])
 
 const props = defineProps({
   weather: {
@@ -29,76 +31,46 @@ const props = defineProps({
 })
 
 const isFlipped = ref(false)
-const isFavorite = ref(false)
 
 const isDay = computed(() => props.mode === "day")
-
 const location = computed(() => props.weather?.location || {})
+const current = computed(() => props.weather?.current || {})
 const forecastData = computed(() => props.weather?.forecast?.forecastday || [])
 
-const getFavorites = () => JSON.parse(localStorage.getItem("favorites")) || []
+const average = (values) => {
+  const nums = values.filter((v) => typeof v === "number" && !Number.isNaN(v))
+  if (!nums.length) return null
+  return nums.reduce((s, n) => s + n, 0) / nums.length
+}
 
-const saveFavorites = (favorites) => localStorage.setItem("favorites", JSON.stringify(favorites))
-
-const isSameLocation = (a, b) =>
-  a.location?.name === b.location?.name && a.location?.country === b.location?.country
-
-const forecast = computed(() => {
-  if (!forecastData.value.length) return null
-
-  if (isDay.value) {
-    return forecastData.value[0]
-  }
-
+const aggregated = computed(() => {
   const days = forecastData.value
+  if (!days.length) return null
+
+  const allHours = days.flatMap((d) => d.hour ?? [])
 
   return {
-    day: {
-      avgtemp_c: Math.round(days.reduce((s, d) => s + d.day.avgtemp_c, 0) / days.length),
-      avghumidity: Math.round(days.reduce((s, d) => s + d.day.avghumidity, 0) / days.length),
-      maxwind_kph: Math.round(days.reduce((s, d) => s + d.day.maxwind_kph, 0) / days.length),
-      pressure_mb: Math.round(days.reduce((s, d) => s + d.day.pressure_mb, 0) / days.length),
-    },
+    avgtemp_c: Math.round(average(days.map((d) => d.day.avgtemp_c)) ?? 0),
+    avgfeelslike_c: Math.round(
+        average(allHours.map((h) => h.feelslike_c)) ?? average(days.map((d) => d.day.avgtemp_c)) ?? 0
+    ),
+    avghumidity: Math.round(average(days.map((d) => d.day.avghumidity)) ?? 0),
+    maxwind_kph: Math.round(average(days.map((d) => d.day.maxwind_kph)) ?? 0),
+    pressure_mb: Math.round(average(allHours.map((h) => h.pressure_mb)) ?? 0),
   }
 })
 
-const forecastDay = computed(() => forecast.value?.day || {})
-const forecastHours = computed(() => forecast.value?.hour?.slice(0, 24) || [])
+const forecastHours = computed(() => forecastData.value[0]?.hour?.slice(0, 24) ?? [])
 
-const addToFavorites = async () => {
+const isFavorite = computed(() => isFav(props.weather))
+
+const onFavoriteClick = async () => {
   if (!props.weather) return
-
-  const favorites = getFavorites()
-
-  const exists = favorites.some((f) => isSameLocation(f, props.weather))
-
-  if (exists) {
-    const updated = favorites.filter((f) => !isSameLocation(f, props.weather))
-    saveFavorites(updated)
-    emit("favorites-updated")
-    isFavorite.value = false
-    return
-  }
-
-  if (favorites.length >= 5) {
+  const result = toggleFavorite(props.weather)
+  if (!result.ok && result.reason === "limit") {
     await modal.alert(t("common.modal.desc"), t("common.modal.title"))
-    return
   }
-
-  saveFavorites([...favorites, props.weather])
-  emit("favorites-updated")
-  isFavorite.value = true
 }
-
-const checkIsFavorite = () => {
-  const favorites = getFavorites()
-
-  isFavorite.value = favorites.some((f) => isSameLocation(f, props.weather))
-}
-
-onMounted(checkIsFavorite)
-
-watch(() => props.weather, checkIsFavorite)
 
 const onCardClick = () => {
   emit("select")
@@ -109,61 +81,58 @@ const onCardClick = () => {
 <template>
   <div class="card-wrapper" :class="{ selected }" @click="onCardClick">
     <button
-      v-if="removable"
-      class="remove-btn"
-      :aria-label="t('weatherCard.remove')"
-      @click.stop="$emit('remove')"
+        v-if="removable"
+        class="remove-btn"
+        :aria-label="t('weatherCard.remove')"
+        @click.stop="$emit('remove')"
     >
       <X />
     </button>
     <div class="card-inner" :class="{ flipped: isFlipped }">
       <div class="card front">
         <div class="top">
-          <div>
+          <div class="head-text">
             <h2 class="city">{{ location.name }}</h2>
             <p class="desc">
-              {{ isDay ? props.weather.current.condition.text : t("weatherCard.forecast") }}
+              <template v-if="isDay">
+                {{ current.condition?.text }}
+                <span v-if="current.is_day !== undefined" class="day-night">
+                  · {{ current.is_day ? t("weatherCard.day") : t("weatherCard.night") }}
+                </span>
+              </template>
+              <template v-else>{{ t("weatherCard.forecast") }}</template>
             </p>
           </div>
-          <img
-            v-if="isDay"
-            class="icon"
-            :src="`https:${props.weather.current.condition.icon}`"
-            alt=""
-          />
+          <img v-if="isDay && current.condition" class="icon" :src="`https:${current.condition.icon}`" alt="" />
         </div>
 
         <div class="temp">
-          {{ isDay ? Math.round(props.weather.current.temp_c) : forecastDay.avgtemp_c }}°
+          {{ isDay ? Math.round(current.temp_c ?? 0) : (aggregated?.avgtemp_c ?? 0) }}°
         </div>
 
         <div class="grid">
           <div class="item">
             <span>{{ t("weatherCard.feelsLike") }}</span>
-            <b
-              >{{
-                isDay ? Math.round(props.weather.current.feelslike_c) : forecastDay.avgtemp_c
-              }}°C</b
-            >
+            <b>{{ isDay ? Math.round(current.feelslike_c ?? 0) : (aggregated?.avgfeelslike_c ?? 0) }}°C</b>
           </div>
 
           <div class="item">
             <span>{{ t("weatherCard.humidity") }}</span>
-            <b>{{ isDay ? props.weather.current.humidity : forecastDay.avghumidity }}%</b>
+            <b>{{ isDay ? current.humidity : (aggregated?.avghumidity ?? 0) }}%</b>
           </div>
 
           <div class="item">
             <span>{{ t("weatherCard.wind") }}</span>
-            <b>{{ isDay ? props.weather.current.wind_kph : forecastDay.maxwind_kph }} km/h</b>
+            <b>{{ isDay ? current.wind_kph : (aggregated?.maxwind_kph ?? 0) }} km/h</b>
           </div>
 
           <div class="item">
             <span>{{ t("weatherCard.pressure") }}</span>
-            <b>{{ isDay ? props.weather.current.pressure_mb : forecastDay.pressure_mb }} hPa</b>
+            <b>{{ isDay ? current.pressure_mb : (aggregated?.pressure_mb ?? 0) }} hPa</b>
           </div>
         </div>
 
-        <button class="favorite-btn" :class="{ active: isFavorite }" @click.stop="addToFavorites">
+        <button class="favorite-btn" :class="{ active: isFavorite }" @click.stop="onFavoriteClick">
           <Star />
         </button>
       </div>
@@ -219,10 +188,10 @@ const onCardClick = () => {
 
 .card-wrapper.selected .card {
   box-shadow:
-    0 0 0 2px rgba(255, 255, 255, 0.85),
-    0 0 32px rgba(255, 255, 255, 0.25),
-    0 10px 40px rgba(0, 0, 0, 0.25),
-    inset 0 1px 1px rgba(255, 255, 255, 0.15);
+      0 0 0 2px rgba(255, 255, 255, 0.85),
+      0 0 32px rgba(255, 255, 255, 0.25),
+      0 10px 40px rgba(0, 0, 0, 0.25),
+      inset 0 1px 1px rgba(255, 255, 255, 0.15);
 }
 
 .remove-btn {
@@ -259,6 +228,7 @@ const onCardClick = () => {
   position: relative;
   width: 390px;
   height: 560px;
+  max-width: 100%;
   transform-style: preserve-3d;
   transition: transform 0.9s;
 }
@@ -276,8 +246,8 @@ const onCardClick = () => {
   background: rgba(255, 255, 255, 0.15);
   border: 1px solid rgba(255, 255, 255, 0.2);
   box-shadow:
-    0 10px 40px rgba(0, 0, 0, 0.25),
-    inset 0 1px 1px rgba(255, 255, 255, 0.15);
+      0 10px 40px rgba(0, 0, 0, 0.25),
+      inset 0 1px 1px rgba(255, 255, 255, 0.15);
   color: white;
   backface-visibility: hidden;
   box-sizing: border-box;
@@ -461,15 +431,234 @@ const onCardClick = () => {
   }
 }
 
-@media (max-width: 600px) {
-  .card-wrapper {
-    transform: scale(0.95);
+@media (max-width: 1024px) {
+  .card-inner {
+    width: 340px;
+    height: 460px;
+  }
+
+  .card {
+    padding: 22px;
+    border-radius: 26px;
+  }
+
+  .city {
+    font-size: 24px;
+  }
+
+  .desc {
+    margin-top: 6px;
+    font-size: 14px;
+  }
+
+  .icon {
+    width: 64px;
+    height: 64px;
+  }
+
+  .temp {
+    margin: 16px 0;
+    font-size: 72px;
+  }
+
+  .grid {
+    gap: 12px;
+  }
+
+  .item {
+    padding: 12px 10px;
+    border-radius: 14px;
+  }
+
+  .item span {
+    margin-bottom: 6px;
+    font-size: 12px;
+  }
+
+  .item b {
+    font-size: 15px;
+  }
+
+  .forecast-title {
+    margin-bottom: 14px;
+    font-size: 24px;
+  }
+
+  .hour-item {
+    padding: 8px 12px;
+    border-radius: 12px;
+  }
+
+  .hour {
+    width: 50px;
+    font-size: 13px;
+  }
+
+  .hour-icon {
+    width: 28px;
+    height: 28px;
+  }
+
+  .condition {
+    font-size: 12px;
+  }
+
+  .hour-temp {
+    font-size: 18px;
+  }
+
+  .favorite-btn {
+    width: 36px;
+    height: 36px;
+  }
+
+  .favorite-btn svg {
+    width: 24px;
+    height: 24px;
+  }
+
+  .remove-btn {
+    width: 28px;
+    height: 28px;
+    top: 10px;
+    left: 10px;
+  }
+
+  .remove-btn svg {
+    width: 16px;
+    height: 16px;
   }
 }
 
-@media (max-width: 420px) {
+@media (max-width: 480px) {
   .card-wrapper {
-    transform: scale(0.85);
+    width: 100%;
+    perspective: none;
+  }
+
+  .card-wrapper:hover {
+    transform: none;
+  }
+
+  .card-inner {
+    width: 100%;
+    max-width: 480px;
+    height: auto;
+    min-height: 88px;
+    transform-style: flat;
+    transition: none;
+  }
+
+  .card-inner.flipped {
+    transform: none;
+  }
+
+  .back,
+  .grid {
+    display: none;
+  }
+
+  .card {
+    position: relative;
+    padding: 14px 16px;
+    border-radius: 18px;
+    backface-visibility: visible;
+  }
+
+  .front {
+    flex-direction: row;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .top {
+    flex: 1;
+    min-width: 0;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 12px;
+  }
+
+  .head-text {
+    flex: 1;
+    min-width: 0;
+    order: 2;
+  }
+
+  .icon {
+    order: 1;
+    width: 48px;
+    height: 48px;
+    flex-shrink: 0;
+  }
+
+  .city {
+    font-size: 18px;
+    line-height: 1.15;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .desc {
+    margin-top: 2px;
+    font-size: 12px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .day-night {
+    opacity: 0.8;
+  }
+
+  .temp {
+    margin: 0;
+    font-size: 34px;
+    font-weight: 800;
+    flex-shrink: 0;
+  }
+
+  .favorite-btn {
+    margin: 0;
+    width: 32px;
+    height: 32px;
+    flex-shrink: 0;
+  }
+
+  .favorite-btn svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  .remove-btn {
+    top: 6px;
+    right: 6px;
+    left: auto;
+    width: 22px;
+    height: 22px;
+  }
+
+  .remove-btn svg {
+    width: 14px;
+    height: 14px;
+  }
+
+  .card-wrapper.selected .card {
+    box-shadow:
+        0 0 0 2px rgba(255, 255, 255, 0.85),
+        0 6px 18px rgba(0, 0, 0, 0.25);
+  }
+}
+
+@media (hover: none) {
+  .card-wrapper:hover {
+    transform: none;
+  }
+
+  .item:hover,
+  .hour-item:hover {
+    transform: none;
   }
 }
 </style>

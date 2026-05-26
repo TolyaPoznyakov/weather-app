@@ -7,12 +7,14 @@
     "pressure": "Pressure",
     "hourlyForecast": "Hourly Forecast",
     "threeDayForecast": "3-Day Forecast",
-    "remove": "Remove city"
+    "remove": "Remove city",
+    "day": "Day",
+    "night": "Night"
   },
   "chart": {
     "hourlyForecast": "Hourly Forecast",
     "threeDayAverage": "Average forecast for 3 days",
-    "temperature": "Temperature °C",
+    "temperature": "Temperature Â°C",
     "now": "Now"
   },
   "forecast": {
@@ -24,6 +26,11 @@
     "button": "Search",
     "noResults": "No results"
   },
+  "nav": {
+    "appName": "Weather",
+    "forecast": "Forecast",
+    "favorites": "Favorites"
+  },
   "common": {
     "modal": {
       "title": "Favorites limit",
@@ -32,9 +39,6 @@
       "cityLimitDesc": "You can show up to 5 cities. Remove one first."
     },
     "loading": "Loading...",
-    "favorites": "Favorites",
-    "w": "W",
-    "eatherForecast": "eather Forecast",
     "cityNotFound": "City not found"
   }
 }

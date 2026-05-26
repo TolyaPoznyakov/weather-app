@@ -7,7 +7,9 @@
     "pressure": "Тиск",
     "hourlyForecast": "Погодинний прогноз",
     "threeDayForecast": "Прогноз на 3 дні",
-    "remove": "Видалити місто"
+    "remove": "Видалити місто",
+    "day": "День",
+    "night": "Ніч"
   },
   "chart": {
     "hourlyForecast": "Погодинний прогноз",
@@ -24,6 +26,11 @@
     "button": "Пошук",
     "noResults": "Нічого не знайдено"
   },
+  "nav": {
+    "appName": "Погода",
+    "forecast": "Прогноз",
+    "favorites": "Обрані"
+  },
   "common": {
     "modal": {
       "title": "Ліміт обраного",
@@ -32,9 +39,6 @@
       "cityLimitDesc": "Можна показати до 5 міст. Спочатку видаліть одне."
     },
     "loading": "Завантаження...",
-    "favorites": "Обрані",
-    "w": "П",
-    "eatherForecast": "рогноз погоди",
     "cityNotFound": "Місто не знайдено"
   }
 }

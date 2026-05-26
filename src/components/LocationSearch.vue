@@ -29,6 +29,7 @@ const updateValue = (e) => {
   }
   timeout = setTimeout(async () => {
     const res = await searchCities(value)
+    if (res === null) return
 
     suggestions.value = res
     showSuggestions.value = true
@@ -61,12 +62,12 @@ onBeforeUnmount(() => {
   <div class="search">
     <div ref="wrapper" class="input-wrapper">
       <input
-        :value="searchCity"
-        type="text"
-        :placeholder="t('search.placeholder')"
-        @input="updateValue"
-        @keyup.enter="suggestions.length ? selectCity(suggestions[0]) : $emit('search')"
-        @focus="showSuggestions = true"
+          :value="searchCity"
+          type="text"
+          :placeholder="t('search.placeholder')"
+          @input="updateValue"
+          @keyup.enter="suggestions.length ? selectCity(suggestions[0]) : $emit('search')"
+          @focus="showSuggestions = true"
       />
       <ul v-if="showSuggestions" class="dropdown">
         <li v-if="loading" class="info">
