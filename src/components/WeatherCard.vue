@@ -80,6 +80,7 @@ const onCardClick = () => {
 
 <template>
   <div class="card-wrapper" :class="{ selected }" @click="onCardClick">
+    <div class="card-inner" :class="{ flipped: isFlipped }">
     <button
         v-if="removable"
         class="remove-btn"
@@ -88,7 +89,6 @@ const onCardClick = () => {
     >
       <X />
     </button>
-    <div class="card-inner" :class="{ flipped: isFlipped }">
       <div class="card front">
         <div class="top">
           <div class="head-text">
@@ -442,6 +442,10 @@ const onCardClick = () => {
     border-radius: 26px;
   }
 
+  .head-text {
+    margin-top: 10px;
+  }
+
   .city {
     font-size: 24px;
   }
@@ -583,6 +587,7 @@ const onCardClick = () => {
     flex: 1;
     min-width: 0;
     order: 2;
+    margin-top: 0;
   }
 
   .icon {

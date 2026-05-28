@@ -128,7 +128,6 @@ onMounted(async () => {
               :key="`${favorite.location.name}-${favorite.location.country}-${favorite.location.region ?? ''}`"
               :weather="favorite"
               :mode="forecastMode"
-              removable
               @remove="removeFavorite(favorite)"
           />
         </TransitionGroup>
